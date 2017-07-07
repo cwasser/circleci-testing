@@ -1,0 +1,123 @@
+FROM debian:stretch-slim
+
+ENTRYPOINT ["/usr/local/sbin/nginx"]
+EXPOSE 443
+EXPOSE 80
+STOPSIGNAL SIGTERM
+WORKDIR /srv/www
+
+ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8"
+
+COPY resources/vendor-keys.pub /usr/local/src/vendor-keys.pub
+
+RUN set -exu;\
+\
+readonly NGINX_VERSION=1.13.1;\
+readonly NGINX_DIGEST=a5856c72a6609a4dc68c88a7f3c33b79e6693343b62952e021e043fe347b6776;\
+\
+readonly OPENSSL_VERSION=1.1.0f;\
+readonly OPENSSL_DIGEST=12f746f3f2493b2f39da7ecf63d7ee19c6ac9ec6a4fcd8c229da8a522cb12765;\
+\
+readonly PCRE_VERSION=8.40;\
+readonly PCRE_DIGEST=1d75ce90ea3f81ee080cdc04e68c9c25a9fb984861a0618be7bbf676b18eda3e;\
+\
+readonly ZLIB_VERSION=1.2.11;\
+readonly ZLIB_DIGEST=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1;\
+\
+readonly BUILD_DEPS='build-essential ca-certificates curl gnupg';\
+\
+mkdir -p /etc/dpkg/dpkg.conf.d;\
+echo 'path-exclude /usr/share/doc-base/*' > /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/doc/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+\
+cd /usr/local/src;\
+apt-get update -q;\
+apt-get install -q -y --auto-remove --no-install-recommends --no-install-suggests ${BUILD_DEPS};\
+\
+gpg --import vendor-keys.pub;\
+rm /usr/local/src/vendor-keys.pub;\
+\
+echo '#!/bin/sh' > dl;\
+echo 'curl -sLSo $2.tar.gz $1/$2-$3.tar.gz' >> dl;\
+echo 'echo "$4 *$2.tar.gz" | sha256sum -c -' >> dl;\
+echo 'curl -sLSo $2.tar.gz.$5 $1/$2-$3.tar.gz.$5' >> dl;\
+echo 'gpg --batch --verify $2.tar.gz.$5 $2.tar.gz' >> dl;\
+echo 'tar -xzf $2.tar.gz' >> dl;\
+echo 'mv $2-$3 $2' >> dl;\
+chmod +x dl;\
+\
+./dl 'https://nginx.org/download' 'nginx' "${NGINX_VERSION}" "${NGINX_DIGEST}" 'asc';\
+./dl 'https://www.openssl.org/source' 'openssl' "${OPENSSL_VERSION}" "${OPENSSL_DIGEST}" 'asc';\
+./dl 'ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre' 'pcre' "${PCRE_VERSION}" "${PCRE_DIGEST}" 'sig';\
+./dl 'http://zlib.net' 'zlib' "${ZLIB_VERSION}" "${ZLIB_DIGEST}" 'asc';\
+\
+cd nginx; \
+adduser --system --group --disabled-password --disabled-login --no-create-home nginx;\
+./configure \
+--user=nginx \
+--group=nginx \
+--prefix=/usr/local \
+--sbin-path=/usr/local/sbin \
+--conf-path=/srv/www/hsw-server/config/nginx/main.ngx \
+--error-log-path=/var/log/nginx/error.log \
+--http-client-body-temp-path=/var/cache/nginx/client-bodies \
+--http-fastcgi-temp-path=/var/cache/nginx/fastcgi \
+--http-log-path=/var/log/nginx/access.log \
+--with-cc-opt='-fstack-protector-strong -fpic -fpie -O2 -pipe' \
+--with-ld-opt='-pie -s -Wl,-O1 -Wl,--hash-style,gnu,-z,relro,-z,now' \
+--with-http_ssl_module \
+--with-http_v2_module \
+--with-openssl-opt='-fstack-protector-strong -fpic -fpie -pipe enable-ec_nistp_64_gcc_128 no-comp -no-deprecated no-dso no-dtls no-dynamic-engine no-engine no-err no-heartbeats no-idea no-md2 no-md4 no-mdc2 no-rc2 no-rc4 no-rc5 no-static-engine' \
+--with-openssl=../openssl \
+--with-pcre=../pcre \
+--with-pcre-jit \
+--with-pcre-opt='-fstack-protector-strong -fpic -fpie -O2 -pipe' \
+--with-zlib=../zlib \
+--with-zlib-opt='-fstack-protector-strong -fpic -fpie -O2 -pipe' \
+--without-http_access_module \
+--without-http_auth_basic_module \
+--without-http_autoindex_module \
+--without-http_empty_gif_module \
+--without-http_geo_module \
+--without-http_memcached_module \
+--without-http_proxy_module \
+--without-http_referer_module \
+--without-http_scgi_module \
+--without-http_split_clients_module \
+--without-http_ssi_module \
+--without-http_upstream_ip_hash_module \
+--without-http_userid_module \
+--without-http_uwsgi_module;\
+make -sj `nproc`;\
+make -s install;\
+strip --strip-all /usr/local/sbin/nginx;\
+mkdir -p /var/cache/nginx/client-bodies /var/cache/nginx/fastcgi;\
+\
+mkdir -p /var/log/nginx;\
+ln -sf /dev/stdout /var/log/nginx/access.log;\
+ln -sf /dev/stderr /var/log/nginx/error.log;\
+\
+apt-get purge -q -y --auto-remove ${BUILD_DEPS};\
+apt-get clean -q -y;\
+rm -rf \
+/etc/dpkg/dpkg.conf.d/ \
+/root/.gnupg/ \
+/tmp/* \
+/usr/local/etc/nginx/ \
+/usr/local/src/ \
+/usr/share/doc-base/ \
+/usr/share/doc/ \
+/usr/share/groff/ \
+/usr/share/info/ \
+/usr/share/linda/ \
+/usr/share/lintian/ \
+/usr/share/man/ \
+/var/lib/apt/lists/* \
+/var/tmp/*;\
+\
+nginx -V

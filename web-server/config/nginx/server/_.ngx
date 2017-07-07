@@ -1,0 +1,10 @@
+# Default host for client's which do not send the Host header.
+
+server {
+	listen          [::]:80 backlog=65536 default_server deferred fastopen=256 ipv6only=off reuseport so_keepalive=off;
+	server_name     _;
+
+	add_header      Warning '299 fleshgrinder "You should know better!"' always;
+
+	return          403;
+}

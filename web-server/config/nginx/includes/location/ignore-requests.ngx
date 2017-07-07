@@ -1,0 +1,7 @@
+# These directives can be used within a location block to completely disable
+# responding to incoming requests.
+
+access_log    off;
+log_not_found off;
+
+return 444;

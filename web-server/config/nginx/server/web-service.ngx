@@ -1,0 +1,27 @@
+server {
+	listen      [::]:80;
+	server_name api.fleshgrinder.docker;
+	root        /srv/www/web-service/src/webapp;
+
+	location /favicon.ico { include includes/location/ignore-requests.ngx; }
+	location /robots.txt  { include includes/location/ignore-requests.ngx; }
+
+	location / {
+		location ~* '^.+\.php$' {
+			internal;
+
+			include includes/fastcgi-parameter.ngx;
+			fastcgi_param PATH_TRANSLATED /src/webapp$fastcgi_path_info;
+			fastcgi_param SCRIPT_FILENAME /src/webapp$fastcgi_script_name;
+			fastcgi_pass hsw-service:9000;
+
+			try_files $uri =404;
+		}
+
+		try_files $uri @web_service;
+	}
+
+	location @web_service {
+		rewrite ^(.*)$ $1.php last;
+	}
+}

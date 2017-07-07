@@ -1,32 +1,50 @@
 version: 2
 
-defaults: &defaults
+cwd: *cwd
+  working_directory: /usr/local/src
+
+default: *default
   docker:
     - image: buildpack-deps:xenial
-  working_directory: /usr/local/src
+  <<: *cwd
+
+dind: *dind
+  docker:
+    - image: docker:17.06
+  <<: *cwd
 
 jobs:
   checkout:
-    <<: *defaults
+    <<: *default
     steps:
       - checkout
       - persist_to_workspace:
           root: .
           paths:
             - .
-  hello_world:
-    <<: *defaults
+  build_web_server:
+    <<: *dind
     steps:
       - attach_workspace:
           at: /usr/local/src
-      - run: ls -la
-      - run: echo 'Hello, World!'
+      - setup_remote_docker
+      - run: docker build --force-rm --pull -t fleshgrinder/web-server:latest .
+  build_web_service:
+    <<: *dind
+    steps:
+      - attach_workspace:
+          at: /usr/local/src
+      - setup_remote_docker
+      - run: docker build --force-rm --pull -t fleshgrinder/web-service:latest .
 
 workflows:
   version: 2
   pipeline:
     jobs:
       - checkout
-      - hello_world:
+      - build_web_server:
+          requires:
+            - checkout
+      - build_web_service:
           requires:
             - checkout

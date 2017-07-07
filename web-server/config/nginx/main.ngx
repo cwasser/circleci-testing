@@ -1,0 +1,19 @@
+# Main nginx configuration files that applies to all configured servers.
+
+daemon              off;
+pcre_jit            on;
+worker_processes    auto;
+error_log           /var/log/nginx/error.log info;
+
+events {
+	accept_mutex    on;
+}
+
+http {
+	charset         utf-8;
+	default_type    application/octet-stream;
+
+	include includes/mime-types.ngx;
+
+	include server/*.ngx;
+}
