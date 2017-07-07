@@ -8,11 +8,6 @@ default: &default
     - image: buildpack-deps:xenial
   <<: *cwd
 
-dind: &dind
-  docker:
-    - image: docker:17.06
-  <<: *cwd
-
 jobs:
   checkout:
     <<: *default
@@ -23,19 +18,39 @@ jobs:
           paths:
             - .
   build_web_server:
-    <<: *dind
+    <<: *default
     steps:
       - attach_workspace:
           at: /usr/local/src
       - setup_remote_docker
-      - run: docker build --force-rm --pull -t fleshgrinder/web-server:latest .
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.06.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      - run:
+          name: Build Web Server Container
+          command: docker build --force-rm --pull -t fleshgrinder/web-server:latest .
   build_web_service:
-    <<: *dind
+    <<: *default
     steps:
       - attach_workspace:
           at: /usr/local/src
       - setup_remote_docker
-      - run: docker build --force-rm --pull -t fleshgrinder/web-service:latest .
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.06.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      - run:
+          name: Build Web Service Container
+          command: docker build --force-rm --pull -t fleshgrinder/web-service:latest .
 
 workflows:
   version: 2
