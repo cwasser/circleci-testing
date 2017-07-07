@@ -1,14 +1,14 @@
 version: 2
 
-cwd: *cwd
+cwd: &cwd
   working_directory: /usr/local/src
 
-default: *default
+default: &default
   docker:
     - image: buildpack-deps:xenial
   <<: *cwd
 
-dind: *dind
+dind: &dind
   docker:
     - image: docker:17.06
   <<: *cwd
