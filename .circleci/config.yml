@@ -18,7 +18,7 @@ jobs:
     <<: *defaults
     steps:
       - attach_workspace:
-        at: /usr/local/src
+          at: /usr/local/src
       - run: ls -la
       - run: echo 'Hello, World!'
 
