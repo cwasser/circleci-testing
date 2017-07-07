@@ -26,11 +26,18 @@ jobs:
       - run:
           name: Install Docker client
           command: |
-            set -x
-            VER="17.06.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
+            apt-get install \
+                linux-image-extra-$(uname -r) \
+                linux-image-extra-virtual \
+                apt-transport-https \
+                software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            add-apt-repository \
+                "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+                $(lsb_release -cs) \
+                stable"
+            apt-get update
+            apt-get install docker-ce
       - run:
           name: Build Web Server Container
           command: docker build --force-rm --pull -t fleshgrinder/web-server:latest .
@@ -43,11 +50,18 @@ jobs:
       - run:
           name: Install Docker client
           command: |
-            set -x
-            VER="17.06.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
+            apt-get install \
+                linux-image-extra-$(uname -r) \
+                linux-image-extra-virtual \
+                apt-transport-https \
+                software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            add-apt-repository \
+                "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+                $(lsb_release -cs) \
+                stable"
+            apt-get update
+            apt-get install docker-ce
       - run:
           name: Build Web Service Container
           command: docker build --force-rm --pull -t fleshgrinder/web-service:latest .
