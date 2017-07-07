@@ -1,0 +1,13 @@
+version: 2
+jobs:
+  build:
+    working_directory: /usr/local/src
+    docker:
+      - image: buildpack-deps:xenial
+    steps:
+      - checkout
+
+workflows:
+  version: 2
+  pipelines:
+    - build

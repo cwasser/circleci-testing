@@ -1,0 +1,20 @@
+# git-scm.com/docs/gitattributes
+
+*               text=auto eol=lf
+
+[attr]hs_txt    text eol=lf tabwidth=4,whitespace=-cr-at-eol,-tab-in-indent,indent-with-non-tab,space-before-tab,trailing-space
+
+.*              hs_txt
+*.ini           hs_txt
+*.md            hs_txt
+*.ngx           hs_txt
+*.php           hs_txt diff=php
+*.puml          hs_txt
+*.sh            hs_txt
+*.yml           text eol=lf whitespace=-cr-at-eol,tab-in-indent,-indent-with-non-tab,-space-before-tab,trailing-space
+Dockerfile      hs_txt
+Makefile        hs_txt
+
+[attr]hs_bin    -text diff
+
+*.png           hs_bin
