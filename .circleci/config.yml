@@ -1,22 +1,32 @@
 version: 2
+
+defaults: &defaults
+  docker:
+    - image: buildpack-deps:xenial
+  working_directory: /usr/local/src
+
 jobs:
-  build:
-    working_directory: /usr/local/src
-    docker:
-      - image: buildpack-deps:xenial
+  checkout:
+    <<: *defaults
     steps:
       - checkout
-      - ls -la
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
   hello_world:
+    <<: *defaults
     steps:
+      - attach_workspace:
+        at: /usr/local/src
       - run: ls -la
       - run: echo 'Hello, World!'
 
 workflows:
   version: 2
-  pipelines:
+  pipeline:
     jobs:
-      - build
+      - checkout
       - hello_world:
           requires:
-            - build
+            - checkout
