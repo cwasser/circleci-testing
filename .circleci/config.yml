@@ -6,9 +6,17 @@ jobs:
       - image: buildpack-deps:xenial
     steps:
       - checkout
+      - ls -la
+  hello_world:
+    steps:
+      - run: ls -la
+      - run: echo 'Hello, World!'
 
 workflows:
   version: 2
   pipelines:
     jobs:
       - build
+      - hello_world:
+          requires:
+            - build
