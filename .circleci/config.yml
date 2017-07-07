@@ -34,7 +34,9 @@ jobs:
             apt-get install -q -y --auto-remove docker-ce
       - run:
           name: Build Web Server Container
-          command: docker build --force-rm --pull -t fleshgrinder/web-server:latest .
+          command: |
+            cd web-server
+            docker build --force-rm --pull -t fleshgrinder/web-server:latest .
   build_web_service:
     <<: *default
     steps:
@@ -52,7 +54,9 @@ jobs:
             apt-get install -q -y --auto-remove docker-ce
       - run:
           name: Build Web Service Container
-          command: docker build --force-rm --pull -t fleshgrinder/web-service:latest .
+          command: |
+            cd web-service
+            docker build --force-rm --pull -t fleshgrinder/web-service:latest .
 
 workflows:
   version: 2
