@@ -32,7 +32,7 @@ jobs:
           name: Build Web Server Container
           command: make server
   build_web_service:
-    <<: *_buildpack
+    <<: *docker_buildpack
     steps:
       - attach_workspace:
           at: /usr/local/src
