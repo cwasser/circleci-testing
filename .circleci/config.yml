@@ -1,9 +1,7 @@
 version: 2
 
-src: &src /usr/local/src
-
 cwd: &cwd
-  working_directory: *src
+  working_directory: /usr/local/src
 
 alpine_git: &alpine_git
   docker:
@@ -21,7 +19,7 @@ jobs:
     steps:
       - checkout
       - persist_to_workspace:
-          root: *src
+          root: /usr/local/src
           paths:
             - .
 
@@ -29,7 +27,7 @@ jobs:
     <<: *docker_buildpack
     steps:
       - attach_workspace:
-          at: *src
+          at: /usr/local/src
       - setup_remote_docker
       - restore_cache:
           keys:
@@ -60,7 +58,7 @@ jobs:
     <<: *docker_buildpack
     steps:
       - attach_workspace:
-          at: *src
+          at: /usr/local/src
       - setup_remote_docker
       - restore_cache:
           keys:
