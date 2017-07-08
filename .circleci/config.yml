@@ -3,14 +3,19 @@ version: 2
 cwd: &cwd
   working_directory: /usr/local/src
 
-default: &default
+alpine_git: &alpine_git
   docker:
-    - image: buildpack-deps:xenial
+    - image: alpine/git
+  <<: *cwd
+
+docker_buildpack: &docker_buildpack
+  docker:
+    - image: fleshgrinder/docker-buildpack:17.06.0-ce
   <<: *cwd
 
 jobs:
   checkout:
-    <<: *default
+    <<: *alpine_git
     steps:
       - checkout
       - persist_to_workspace:
@@ -18,45 +23,23 @@ jobs:
           paths:
             - .
   build_web_server:
-    <<: *default
+    <<: *docker_buildpack
     steps:
       - attach_workspace:
           at: /usr/local/src
       - setup_remote_docker
-      - run:
-          name: Install Docker Client
-          command: |
-            apt-get update -qq
-            apt-get install -q -y --auto-remove apt-transport-https software-properties-common
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-            apt-get update -qq
-            apt-get install -q -y --auto-remove docker-ce
       - run:
           name: Build Web Server Container
-          command: |
-            cd web-server
-            docker build --force-rm --pull -t fleshgrinder/web-server:latest .
+          command: make server
   build_web_service:
-    <<: *default
+    <<: *_buildpack
     steps:
       - attach_workspace:
           at: /usr/local/src
       - setup_remote_docker
       - run:
-          name: Install Docker Client
-          command: |
-            apt-get update -qq
-            apt-get install -q -y --auto-remove apt-transport-https software-properties-common
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-            apt-get update -qq
-            apt-get install -q -y --auto-remove docker-ce
-      - run:
           name: Build Web Service Container
-          command: |
-            cd web-service
-            docker build --force-rm --pull -t fleshgrinder/web-service:latest .
+          command: make service
 
 workflows:
   version: 2
