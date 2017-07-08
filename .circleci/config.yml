@@ -6,13 +6,11 @@ cwd: &cwd
   working_directory: *src
 
 alpine_git: &alpine_git
-  docker:
-    - image: alpine/git
+  docker: {image: alpine/git}
   <<: *cwd
 
 docker_buildpack: &docker_buildpack
-  docker:
-    - image: fleshgrinder/docker-buildpack:17.06.0-ce
+  docker: {image: fleshgrinder/docker-buildpack:17.06.0-ce}
   <<: *cwd
 
 jobs:
@@ -22,8 +20,7 @@ jobs:
       - checkout
       - persist_to_workspace:
           root: *src
-          paths:
-            - .
+          paths: [.]
 
   build_web_server:
     <<: *docker_buildpack
@@ -32,10 +29,8 @@ jobs:
           at: *src
       - setup_remote_docker
       - restore_cache:
-          keys:
-            - web-server-{{ .Branch }}
-          paths:
-            - /var/cache/web-server.tar
+          keys: [web-server-{{ .Branch }}]
+          paths: [/var/cache/web-server.tar]
       - run:
           name: Load Docker Cache
           command: |
@@ -52,9 +47,8 @@ jobs:
             mkdir -p /var/cache
             docker save -o /var/cache/web-server.tar fleshgrinder/web-server
       - save_cache:
-        key: web-server-{{ .Branch }}-{{ epoch }}
-        paths:
-          - /var/cache/web-server.tar
+          key: web-server-{{ .Branch }}-{{ epoch }}
+          paths: [/var/cache/web-server.tar]
 
   build_web_service:
     <<: *docker_buildpack
@@ -63,10 +57,8 @@ jobs:
           at: *src
       - setup_remote_docker
       - restore_cache:
-          keys:
-            - web-service-{{ .Branch }}
-          paths:
-            - /var/cache/web-service.tar
+          keys: [web-service-{{ .Branch }}]
+          paths: [/var/cache/web-service.tar]
       - run:
           name: Load Docker Cache
           command: |
@@ -83,9 +75,8 @@ jobs:
             mkdir -p /var/cache
             docker save -o /var/cache/web-service.tar fleshgrinder/web-service
       - save_cache:
-        key: web-service-{{ .Branch }}-{{ epoch }}
-        paths:
-          - /var/cache/web-service.tar
+          key: web-service-{{ .Branch }}-{{ epoch }}
+          paths: [/var/cache/web-service.tar]
 
 workflows:
   version: 2
@@ -93,8 +84,6 @@ workflows:
     jobs:
       - checkout
       - build_web_server:
-          requires:
-            - checkout
+          requires: [checkout]
       - build_web_service:
-          requires:
-            - checkout
+          requires: [checkout]
