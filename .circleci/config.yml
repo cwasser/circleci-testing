@@ -4,13 +4,13 @@ jobs:
   checkout:
     docker:
       image: alpine/git
+    working_directory: /usr/local/src
     steps:
       - checkout
       - persist_to_workspace:
           root: /usr/local/src
           paths:
             - .
-    working_directory: /usr/local/src
 
 #  build_web_server:
 #    docker:
