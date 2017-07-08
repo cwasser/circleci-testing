@@ -1,7 +1,9 @@
 version: 2
 
+src: &src /usr/local/src
+
 cwd: &cwd
-  working_directory: /usr/local/src
+  working_directory: *src
 
 alpine_git: &alpine_git
   docker:
@@ -19,27 +21,71 @@ jobs:
     steps:
       - checkout
       - persist_to_workspace:
-          root: /usr/local/src
+          root: *src
           paths:
             - .
+
   build_web_server:
     <<: *docker_buildpack
     steps:
       - attach_workspace:
-          at: /usr/local/src
+          at: *src
       - setup_remote_docker
+      - restore_cache:
+          keys:
+            - web-server-{{ .Branch }}
+          paths:
+            - /var/cache/web-server.tar
       - run:
-          name: Build Web Server Container
-          command: make server
+          name: Load Docker Cache
+          command: |
+            set +o pipefail
+            docker load -i /var/cache/web-server.tar | true
+      - run:
+          name: Build Server
+          command: |
+            make web-server WEB_SERVER_TAG=1.0.${CIRCLE_BUILD_NUM}+commit-${CIRCLE_SHA1}
+            docker images
+      - run:
+          name: Save Docker Cache
+          command: |
+            mkdir -p /var/cache
+            docker save -o /var/cache/web-server.tar fleshgrinder/web-server
+      - save_cache:
+        key: web-server-{{ .Branch }}-{{ epoch }}
+        paths:
+          - /var/cache/web-server.tar
+
   build_web_service:
     <<: *docker_buildpack
     steps:
       - attach_workspace:
-          at: /usr/local/src
+          at: *src
       - setup_remote_docker
+      - restore_cache:
+          keys:
+            - web-service-{{ .Branch }}
+          paths:
+            - /var/cache/web-service.tar
       - run:
-          name: Build Web Service Container
-          command: make service
+          name: Load Docker Cache
+          command: |
+            set +o pipefail
+            docker load -i /var/cache/web-service.tar | true
+      - run:
+          name: Build service
+          command: |
+            make web-service WEB_SERVICE_TAG=1.0.${CIRCLE_BUILD_NUM}+commit-${CIRCLE_SHA1}
+            docker images
+      - run:
+          name: Save Docker Cache
+          command: |
+            mkdir -p /var/cache
+            docker save -o /var/cache/web-service.tar fleshgrinder/web-service
+      - save_cache:
+        key: web-service-{{ .Branch }}-{{ epoch }}
+        paths:
+          - /var/cache/web-service.tar
 
 workflows:
   version: 2
