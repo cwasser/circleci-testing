@@ -26,13 +26,13 @@ WEB_SERVER_TAG ?= latest
 web-server: ## Build the Web Server container
 	cd $(__DIR__)web-server
 	docker build --cache-from=web-server --force-rm --pull -t fleshgrinder/web-server:$(WEB_SERVER_TAG) .
-.PHONY: web-server-container
+.PHONY: web-server
 
 WEB_SERVICE_TAG ?= latest
 web-service: ## Build the Web Service container
 	cd $(__DIR__)web-service
 	docker build --cache-from=web-service --force-rm --pull -t fleshgrinder/web-service:$(WEB_SERVICE_TAG) .
-.PHONY: web-service-container
+.PHONY: web-service
 
 # ------------------------------------------------------------------------------ Config
 
