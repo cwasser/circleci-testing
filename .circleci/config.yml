@@ -30,10 +30,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build Web Server Container
-          command: |
-            pwd
-            ls -la
-            make server
+          command: make server
   build_web_service:
     <<: *docker_buildpack
     steps:
@@ -42,10 +39,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build Web Service Container
-          command: |
-            pwd
-            ls -la
-            make service
+          command: make service
 
 workflows:
   version: 2
