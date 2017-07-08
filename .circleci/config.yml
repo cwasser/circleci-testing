@@ -19,7 +19,7 @@ jobs:
     steps:
       - checkout
       - persist_to_workspace:
-          root: .
+          root: /usr/local/src
           paths:
             - .
   build_web_server:
