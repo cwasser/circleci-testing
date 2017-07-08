@@ -6,11 +6,11 @@ cwd: &cwd
   working_directory: *src
 
 alpine_git: &alpine_git
-  docker: {image: alpine/git}
+  docker: {image: 'alpine/git'}
   <<: *cwd
 
 docker_buildpack: &docker_buildpack
-  docker: {image: fleshgrinder/docker-buildpack:17.06.0-ce}
+  docker: {image: 'fleshgrinder/docker-buildpack:17.06.0-ce'}
   <<: *cwd
 
 jobs:
