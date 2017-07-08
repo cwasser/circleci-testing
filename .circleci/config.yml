@@ -23,8 +23,8 @@ jobs:
       - attach_workspace: {at: *src}
       - setup_remote_docker
       - restore_cache:
-          keys: [web-server-{{ .Branch }}]
-          paths: [/var/cache/web-server.tar]
+          keys: ['web-server-{{ .Branch }}']
+          paths: ['/var/cache/web-server.tar']
       - run:
           name: Load Docker Cache
           command: |
@@ -42,7 +42,7 @@ jobs:
             docker save -o /var/cache/web-server.tar fleshgrinder/web-server
       - save_cache:
           key: web-server-{{ .Branch }}-{{ epoch }}
-          paths: [/var/cache/web-server.tar]
+          paths: ['/var/cache/web-server.tar']
 
   build_web_service:
     <<: *docker_buildpack
@@ -50,8 +50,8 @@ jobs:
       - attach_workspace: {at: *src}
       - setup_remote_docker
       - restore_cache:
-          keys: [web-service-{{ .Branch }}]
-          paths: [/var/cache/web-service.tar]
+          keys: ['web-service-{{ .Branch }}']
+          paths: ['/var/cache/web-service.tar']
       - run:
           name: Load Docker Cache
           command: |
@@ -69,7 +69,7 @@ jobs:
             docker save -o /var/cache/web-service.tar fleshgrinder/web-service
       - save_cache:
           key: web-service-{{ .Branch }}-{{ epoch }}
-          paths: [/var/cache/web-service.tar]
+          paths: ['/var/cache/web-service.tar']
 
 workflows:
   version: 2
