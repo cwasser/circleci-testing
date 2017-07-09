@@ -3,11 +3,11 @@ version: 2
 src: &src /usr/local/src
 
 alpine_git: &alpine_git
-  docker: [{image: 'alpine/git'}]
+  docker: [{image: alpine/git}]
   working_directory: *src
 
 docker_buildpack: &docker_buildpack
-  docker: [{image: 'fleshgrinder/docker-buildpack:17.06.0-ce'}]
+  docker: [{image: fleshgrinder/docker-buildpack}]
   working_directory: *src
 
 jobs:
@@ -50,7 +50,7 @@ jobs:
             docker push fleshgrinder/web-service-test:latest
 
   test_web_service:
-    docker: [{image: 'fleshgrinder/web-service-test'}]
+    docker: [{image: fleshgrinder/web-service-test}]
     working_directory: /usr/local/src/web-service
     steps:
       - attach_workspace: {at: *src}
@@ -80,61 +80,61 @@ jobs:
 #          command: make -c web-service test VERBOSE=1
 
   # TODO only build image if their Dockerfile has changed!
-  build_web_server:
-    <<: *docker_buildpack
-    steps:
-      - attach_workspace: {at: *src}
-      - setup_remote_docker
-      - restore_cache:
-          keys: ['web-server-{{ .Branch }}']
-          paths: ['/var/cache/web-server.tar']
-      - run:
-          name: Load Docker Cache
-          command: |
-            set +o pipefail
-            docker load -i /var/cache/web-server.tar | true
-      - run:
-          name: Build Web Server
-          command: |
-            make web-server WEB_SERVER_TAG=${CIRCLE_BUILD_NUM}
-            docker images
-      - run:
-          name: Save Docker Cache
-          command: |
-            mkdir -p /var/cache
-            docker save -o /var/cache/web-server.tar fleshgrinder/web-server
-      - save_cache:
-          key: web-server-{{ .Branch }}-{{ epoch }}
-          paths: ['/var/cache/web-server.tar']
+#  build_web_server:
+#    <<: *docker_buildpack
+#    steps:
+#      - attach_workspace: {at: *src}
+#      - setup_remote_docker
+#      - restore_cache:
+#          keys: ['web-server-{{ .Branch }}']
+#          paths: ['/var/cache/web-server.tar']
+#      - run:
+#          name: Load Docker Cache
+#          command: |
+#            set +o pipefail
+#            docker load -i /var/cache/web-server.tar | true
+#      - run:
+#          name: Build Web Server
+#          command: |
+#            make web-server WEB_SERVER_TAG=${CIRCLE_BUILD_NUM}
+#            docker images
+#      - run:
+#          name: Save Docker Cache
+#          command: |
+#            mkdir -p /var/cache
+#            docker save -o /var/cache/web-server.tar fleshgrinder/web-server
+#      - save_cache:
+#          key: web-server-{{ .Branch }}-{{ epoch }}
+#          paths: ['/var/cache/web-server.tar']
       # TODO push to registry
 
   # TODO only build image if their Dockerfile has changed!
-  build_web_service:
-    <<: *docker_buildpack
-    steps:
-      - attach_workspace: {at: *src}
-      - setup_remote_docker
-      - restore_cache:
-          keys: ['web-service-{{ .Branch }}']
-          paths: ['/var/cache/web-service.tar']
-      - run:
-          name: Load Docker Cache
-          command: |
-            set +o pipefail
-            docker load -i /var/cache/web-service.tar | true
-      - run:
-          name: Build Web Service
-          command: |
-            make web-service WEB_SERVICE_TAG=${CIRCLE_BUILD_NUM}
-            docker images
-      - run:
-          name: Save Docker Cache
-          command: |
-            mkdir -p /var/cache
-            docker save -o /var/cache/web-service.tar fleshgrinder/web-service
-      - save_cache:
-          key: web-service-{{ .Branch }}-{{ epoch }}
-          paths: ['/var/cache/web-service.tar']
+#  build_web_service:
+#    <<: *docker_buildpack
+#    steps:
+#      - attach_workspace: {at: *src}
+#      - setup_remote_docker
+#      - restore_cache:
+#          keys: ['web-service-{{ .Branch }}']
+#          paths: ['/var/cache/web-service.tar']
+#      - run:
+#          name: Load Docker Cache
+#          command: |
+#            set +o pipefail
+#            docker load -i /var/cache/web-service.tar | true
+#      - run:
+#          name: Build Web Service
+#          command: |
+#            make web-service WEB_SERVICE_TAG=${CIRCLE_BUILD_NUM}
+#            docker images
+#      - run:
+#          name: Save Docker Cache
+#          command: |
+#            mkdir -p /var/cache
+#            docker save -o /var/cache/web-service.tar fleshgrinder/web-service
+#      - save_cache:
+#          key: web-service-{{ .Branch }}-{{ epoch }}
+#          paths: ['/var/cache/web-service.tar']
       # TODO push to registry
 
 workflows:
