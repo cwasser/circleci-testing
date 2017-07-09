@@ -36,18 +36,26 @@ jobs:
       - run:
           name: Save Docker Cache
           command: |
-            [ -f /skip ] && echo skipping || \
-              mkdir -p /cache/docker && \
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              mkdir -p /cache/docker
               docker save -o /cache/docker/web-service-test.tar fleshgrinder/web-service-test
+            fi
       - save_cache:
           key: v1-web-service-test-{{ checksum "Dockerfile.web-service-test" }}
           paths: [/cache/docker/web-service-test.tar]
       - run:
           name: Push Docker Image
           command: |
-            [ -f /skip ] && echo skiping || \
-              docker login -u fleshgrinder -p "${DOCKER_PASS}" && \
+            if [ -f /skip ]
+            then
+              echo skiping
+            else
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
               docker push fleshgrinder/web-service-test:latest
+            fi
 
   test_web_service:
     docker: [{image: fleshgrinder/web-service-test}]
