@@ -29,16 +29,8 @@ install: composer.json ## Install dependencies
 composer.json: composer.lock
 composer.lock: vendor/autoload.php
 vendor/autoload.php:
-	docker run \
-		-v $(__DIR__)://usr/local/src \
-		-v //var/cache/composer://root/.composer \
-		--entrypoint ls \
-		--rm \
-		-ti \
-		fleshgrinder/web-service-test \
-		-la
-#	$(call COMPOSER_EX,install --no-suggest)
-#	touch $@
+	$(call COMPOSER_EX,install --no-suggest)
+	touch $@
 
 test: install ## Run all tests
 	$(call COMPOSER)
