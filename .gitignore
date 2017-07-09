@@ -1,3 +1,5 @@
 # git-scm.com/docs/gitignore
 
 .idea/
+target/
+vendor/

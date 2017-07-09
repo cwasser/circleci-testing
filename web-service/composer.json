@@ -1,0 +1,45 @@
+{
+	"name": "fleshgrinder/web-service",
+	"description": "PHP Web Service",
+	"minimum-stability": "stable",
+	"license": "proprietary",
+	"authors": [
+		{
+			"name": "Richard Fussenegger",
+			"email": "email@example.com"
+		}
+	],
+	"require": {
+		"php-64bit": "^7.1",
+		"php-ipv6": "*",
+		"ext-json": "*",
+		"ext-mbstring": "*",
+		"ext-pcre": "*"
+	},
+	"require-dev": {
+		"ext-dom": "*",
+		"ext-libxml": "*",
+		"ext-openssl": "*",
+		"ext-pcntl": "*",
+		"ext-xml": "*",
+		"ext-zip": "*",
+		"ext-zlib": "*",
+		"phpstan/phpstan": "^0.7",
+		"phpunit/php-invoker": "^1.1",
+		"phpunit/phpunit": "^6.2",
+		"vimeo/psalm": "^0.3"
+	},
+	"config": {
+		"sort-packages": true
+	},
+	"scripts": {
+		"psalm": "psalm --find-dead-code",
+		"phpstan": "phpstan analyze --ansi --configuration=phpstan.neon --level=5 --no-progress src/main/php/ src/test/php/",
+		"phpunit": "phpdbg -qrr ./vendor/bin/phpunit --colors=always",
+		"test": [
+			"@psalm",
+			"@phpstan",
+			"@phpunit"
+		]
+	}
+}

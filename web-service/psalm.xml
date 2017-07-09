@@ -1,0 +1,23 @@
+<psalm
+	requireVoidReturnType="true"
+	stopOnFirstError="false"
+	totallyTyped="true"
+	useAssertForType="true"
+	useDocblockTypes="true"
+>
+	<projectFiles>
+		<directory name="src/main/php"/>
+	</projectFiles>
+
+	<issueHandlers>
+		<DeprecatedMethod errorLevel="info"/>
+		<InvalidDocblock errorLevel="error"/>
+		<LessSpecificReturnType errorLevel="info"/>
+		<MisplacedRequiredParam errorLevel="error"/>
+		<MissingClosureReturnType errorLevel="info"/>
+		<MissingConstructor errorLevel="info"/>
+		<MissingPropertyType errorLevel="error"/>
+		<MissingReturnType errorLevel="info"/>
+		<PropertyNotSetInConstructor errorLevel="info"/>
+	</issueHandlers>
+</psalm>

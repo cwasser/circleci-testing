@@ -6,17 +6,16 @@ STOPSIGNAL SIGQUIT
 WORKDIR /srv/www
 
 ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8" \
-	TRV_HSW_SERVICE_PHP_OPCACHE_TTL=1 \
-	TRV_HSW_SERVICE_PHP_ZEND_ASSERTIONS=1
+	TRV_HSW_SERVICE_PHP_OPCACHE_TTL=86400 \
+	TRV_HSW_SERVICE_PHP_ZEND_ASSERTIONS=0
 
 COPY resources/vendor-keys.pub /usr/local/src/vendor-keys.pub
 
 RUN \
 set -exu;\
 \
-readonly PHP_VERSION=7.1.6;\
-readonly PHP_DIGEST=01584dc521ab7ec84b502b61952f573652fe6aa00c18d6d844fb9209f14b245b;\
-readonly PHP_DEPS='libcurl4-openssl-dev libgmp-dev libicu-dev libxml2-dev zlib1g-dev';\
+readonly PHP_VERSION=7.1.7;\
+readonly PHP_DIGEST=e0dbab8da601ee5119368d6f93dc1a86ad53b799d2f8c1209d6b827a2b259f92;\
 readonly BUILD_DEPS='build-essential ca-certificates curl gnupg re2c';\
 \
 mkdir -p /etc/dpkg/dpkg.conf.d;\
@@ -30,10 +29,7 @@ echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
 \
 cd /usr/local/src;\
 apt-get update -q;\
-apt-get install -q -y --auto-remove --no-install-recommends --no-install-suggests ${BUILD_DEPS} ${PHP_DEPS};\
-\
-mkdir -p /usr/include/curl;\
-ln -s /usr/include/x86_64-linux-gnu/curl/easy.h /usr/include/curl/easy.h;\
+apt-get install -qy --auto-remove --no-install-recommends --no-install-suggests ${BUILD_DEPS};\
 \
 gpg --import vendor-keys.pub;\
 rm /usr/local/src/vendor-keys.pub;\
@@ -54,7 +50,7 @@ export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu,-z,relro,-z,now';\
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 --with-config-file-path=/srv/www/config/php \
---with-config-file-scan-dir=/srv/www/config/php/fpm-enabled \
+--with-config-file-scan-dir=/srv/www/config/php/conf.d \
 --with-libdir="lib/$(dpkg-architecture --query DEB_BUILD_MULTIARCH)" \
 \
 --disable-cgi \
@@ -72,22 +68,14 @@ export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu,-z,relro,-z,now';\
 --with-fpm-group=php \
 \
 --disable-all \
---enable-fileinfo \
---enable-filter \
---enable-intl \
 --enable-json \
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
---enable-pcntl \
---enable-sockets \
---with-curl \
---with-gmp \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
---with-pic \
---with-zlib;\
+--with-pic;\
 make -sj `nproc`;\
 make -s install;\
 strip --strip-all /usr/local/sbin/php-fpm;\
@@ -96,14 +84,14 @@ mkdir -p /var/log/php;\
 ln -sf /dev/stdout /var/log/php/access.log;\
 ln -sf /dev/stderr /var/log/php/error.log;\
 \
-apt-get purge -q -y --auto-remove ${BUILD_DEPS};\
-apt-get clean -q -y;\
+apt-get purge -qy --auto-remove ${BUILD_DEPS};\
+apt-get clean -qy;\
 rm -rf \
 /etc/dpkg/dpkg.conf.d/ \
 /root/.gnupg/ \
 /tmp/* \
 /usr/local/etc/nginx/ \
-/usr/local/src/ \
+/usr/local/src/* \
 /usr/share/doc-base/ \
 /usr/share/doc/ \
 /usr/share/groff/ \

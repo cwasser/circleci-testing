@@ -2,5 +2,13 @@
 # the ignored files are not sent to the docker build server, and building is
 # faster because only required files are transfered.
 
-/config/
-/src/
+config/
+src/
+target/
+vendor/
+
+.*ignore
+composer.*
+Dockerfile.*
+Makefile
+phpunit.xml*

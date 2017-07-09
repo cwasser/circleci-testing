@@ -1,1 +1,0 @@
-assert.exception = 1

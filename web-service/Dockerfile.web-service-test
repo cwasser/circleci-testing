@@ -1,0 +1,65 @@
+# We use a standard Ubuntu installation for testing of our code. Most people
+# are familiar with Ubuntu and it has the best PHP packages where almost all
+# modules are readily available.
+
+FROM ubuntu:xenial
+
+WORKDIR /usr/local/src
+
+ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8" \
+	COMPOSER_ALLOW_SUPERUSER=1 \
+	COMPOSER_DISCARD_CHANGES=1 \
+	COMPOSER_NO_INTERACTION=1
+
+RUN \
+set -exu;\
+\
+readonly PHP_VERSION='7.1';\
+\
+mkdir -p /etc/dpkg/dpkg.conf.d;\
+echo 'path-exclude /usr/share/doc-base/*' > /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/doc/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+\
+cd /usr/local/src;\
+apt-get update -q;\
+apt-get install -qy --auto-remove --no-install-recommends --no-install-suggests git software-properties-common;\
+add-apt-repository ppa:ondrej/php;\
+\
+apt-get update -q;\
+apt-get install -qy --auto-remove --no-install-recommends --no-install-suggests \
+php${PHP_VERSION}-cli \
+php${PHP_VERSION}-dom \
+php${PHP_VERSION}-mbstring \
+php${PHP_VERSION}-phpdbg \
+php${PHP_VERSION}-xml \
+php${PHP_VERSION}-zip;\
+\
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');";\
+php -r "if (hash_file('SHA384', 'composer-setup.php') === '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;";\
+php composer-setup.php --filename=composer --install-dir=/usr/local/bin;\
+\
+apt-get purge -qy --auto-remove software-properties-common;\
+apt-get clean -qy;\
+\
+rm -rf \
+/etc/dpkg/dpkg.conf.d/ \
+/tmp/* \
+/usr/local/src/* \
+/usr/share/doc-base/ \
+/usr/share/doc/ \
+/usr/share/groff/ \
+/usr/share/info/ \
+/usr/share/linda/ \
+/usr/share/lintian/ \
+/usr/share/man/ \
+/var/lib/apt/lists/* \
+/var/tmp/*;\
+\
+php -v;\
+php -m;\
+composer --version
