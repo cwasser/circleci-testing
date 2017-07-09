@@ -2,8 +2,8 @@ version: 2
 
 src: &src /usr/local/src
 
-alpine_git: &alpine_git
-  docker: [{image: alpine/git}]
+alpine: &alpine
+  docker: [{image: fleshgrinder/alpine-git-tar}]
   working_directory: *src
 
 docker_buildpack: &docker_buildpack
@@ -12,13 +12,13 @@ docker_buildpack: &docker_buildpack
 
 jobs:
   checkout:
-    <<: *alpine_git
+    <<: *alpine
     steps:
       - checkout
       - persist_to_workspace: {root: *src, paths: [.]}
 
   should_build_web_service_test:
-    <<: *alpine_git
+    <<: *alpine
     steps:
       - attach_workspace: {at: *src}
       - run:
