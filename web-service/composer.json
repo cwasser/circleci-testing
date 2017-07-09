@@ -29,6 +29,19 @@
 		"phpunit/phpunit": "^6.2",
 		"vimeo/psalm": "^0.3"
 	},
+	"autoload": {
+		"psr-4": {
+			"Fleshgrinder\\": "src/main/php/Fleshgrinder/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Fleshgrinder\\": [
+				"src/main/php/Fleshgrinder/",
+				"src/test/php/Fleshgrinder/"
+			]
+		}
+	},
 	"config": {
 		"sort-packages": true
 	},
