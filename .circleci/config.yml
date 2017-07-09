@@ -71,7 +71,7 @@ jobs:
             - /src/web-service/vendor
       - run:
           name: Install Dependencies
-          command: composer install --no-suggest
+          command: composer install --no-progress --no-suggest
       - save_cache:
           key: v1-composer-{{ checksum "composer.lock" }}
           paths:
