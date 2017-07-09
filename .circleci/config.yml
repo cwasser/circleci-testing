@@ -17,17 +17,6 @@ jobs:
       - checkout
       - persist_to_workspace: {root: *src, paths: [.]}
 
-  should_build_web_service_test:
-    <<: *alpine
-    steps:
-      - attach_workspace: {at: *src}
-      - run:
-          name: Determine if Web Service Test should be built
-          command: |
-            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            RESULT=$(git diff "${COMMIT_RANGE}" --name-status | grep web-service/Dockerfile.web-service-test)
-            test "${RESULT}" != ""
-
   build_web_service_test:
     <<: *docker_buildpack
     steps:
@@ -44,20 +33,30 @@ jobs:
             docker load -i /var/cache/web-service-test.tar | true
       - run:
           name: Build Web Service Test
-          command: make -C web-service web-service-test
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            RESULT=$(git diff "${COMMIT_RANGE}" --name-status | grep web-service/Dockerfile.web-service-test)
+            if [ "${RESULT}" != "" ]
+              then make -C web-service web-service-test
+              else touch /tmp/skip-web-service-test
+            fi
       - run:
           name: Save Docker Cache
           command: |
-            mkdir -p /var/cache/docker
-            docker save -o /var/cache/docker/web-service-test.tar fleshgrinder/web-service-test
+            if [ ! -f /tmp/skip-web-service-test ]; then
+              mkdir -p /var/cache/docker
+              docker save -o /var/cache/docker/web-service-test.tar fleshgrinder/web-service-test
+            fi
       - save_cache:
           key: web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
           paths: [/var/cache/docker/web-service-test.tar]
       - run:
           name: Push Docker Image
           command: |
-            docker login -u fleshgrinder -p "${DOCKER_PASS}"
-            docker push fleshgrinder/web-service-test:latest
+            if [ ! -f /tmp/skip-web-service-test ]; then
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-service-test:latest
+            fi
 
   test_web_service:
     docker: [{image: fleshgrinder/web-service-test}]
@@ -148,12 +147,9 @@ workflows:
   pipeline:
     jobs:
       - checkout
-      - should_build_web_service_test:
-          filters: {branches: {only: [master]}}
-          requires: [checkout]
       - build_web_service_test:
           filters: {branches: {only: [master]}}
-          requires: [should_build_web_service_test]
+          requires: [checkout]
       - test_web_service:
           requires: [checkout, build_web_service_test]
 #      - build_web_server:
