@@ -1,6 +1,6 @@
 __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
-include resources/make/functions.mk
+include ../resources/make/functions.mk
 
 help: ## Display this help
 	@printf "$(FG_YELLOW)Usage:$(RESET)\n    make [flags] [target] [options]\n\n"
@@ -10,22 +10,23 @@ help: ## Display this help
 	@printf "\n$(FG_YELLOW)Options:$(RESET)\n"
 	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set mode to 1 for verbose output $(FG_YELLOW)[default: 0]$(RESET)\n" "VERBOSE=<mode>"
 	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set the tag for the $(FG_GREEN)web-server$(RESET) target's container $(FG_YELLOW)[default: latest]$(RESET)\n" "WEB_SERVER_TAG=<tag>"
-	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set the tag for the $(FG_GREEN)web-service$(RESET) target's container $(FG_YELLOW)[default: latest]$(RESET)\n" "WEB_SERVICE_TAG=<tag>"
-	@printf "\n$(FG_YELLOW)Pro-tip:$(RESET) use $(FG_GRAY)make -j \`nproc\` [target]$(RESET) for parallel execution.\n\n"
+	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set the tag for the $(FG_GREEN)web-server-debug(RESET) target's container $(FG_YELLOW)[default: latest]$(RESET)\n" "WEB_SERVER_DEBUG_TAG=<tag>"
+	@printf "\n"
 .PHONY: help
 
-docker-clean: ## Cleanup unused docker resources
-	docker system prune --force
-.PHONY: docker-clean
+dockerfiles: ## Generate the docker files
+	if command -v php >/dev/null
+		then php bin/gen-dockerfiles
+		else docker run -it --rm --name gen-dockerfiles \
+			-v $(__DIR__)://src -w //src php:cli php bin/gen-dockerfiles
+	fi
 
-docker-cleaner: ## Cleanup all docker resources
-	docker system prune --all --force
-.PHONY: docker-cleaner
+WEB_SERVER_TAG ?= latest
+web-server: Dockerfile.web-server ## Build the production image
+	$(call docker_build,$(WEB_SERVER_TAG))
+	touch $<
 
-web-server: ## Build the Web Server container
-	$(MAKE) -C $@ $@
-.PHONY: web-server
-
-web-service: ## Build the Web Service container
-	$(MAKE) -C $@ $@
-.PHONY: web-service
+WEB_SERVER_DEBUG_TAG ?= latest
+web-server-debug: Dockerfile.web-server-debug ## Build the debug image
+	$(call docker_build,$(WEB_SERVER_DEBUG_TAG))
+	touch $<

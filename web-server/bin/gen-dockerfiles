@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+
+chdir(__DIR__ . '/..');
+
+$config = parse_ini_file('config/docker/config.ini', true);
+
+foreach (['', '-debug'] as $suffix) {
+	$debug = (bool) $suffix;
+	ob_start();
+	require __DIR__ . '/../config/docker/dockerfile.tpl.php';
+	file_put_contents("Dockerfile.web-server{$suffix}", ob_get_clean());
+}

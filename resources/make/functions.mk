@@ -46,11 +46,10 @@ endef
 # Cache is stored in root for sharing with other PHP based containers!
 define composer =
 	docker run \
+		-it --rm --name composer \
 		-v $(__DIR__)://usr/local/src \
 		-v //var/cache/composer://root/.composer \
 		--entrypoint composer \
-		--rm \
-		-ti \
 		fleshgrinder/$(1) \
 		$(2)
 endef
