@@ -37,7 +37,7 @@ jobs:
             docker load -i /var/cache/web-service-test.tar | true
       - run:
           name: Build Web Service Test
-          command: make -c web-service web-service-test
+          command: make -C web-service web-service-test
       - run:
           name: Save Docker Cache
           command: |
@@ -48,7 +48,7 @@ jobs:
           paths: [/var/cache/docker/web-service-test.tar]
       - run:
           name: Install Dependencies
-          command: make -c web-service install VERBOSE=1
+          command: make -C web-service install VERBOSE=1
 #      - save_cache:
 #          key: composer
 #          paths: [/var/cache/composer]

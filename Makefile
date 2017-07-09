@@ -23,9 +23,9 @@ docker-cleaner: ## Cleanup all docker resources
 .PHONY: docker-cleaner
 
 web-server: ## Build the Web Server container
-	$(MAKE) -c $@ $@
+	$(MAKE) -C $@ $@
 .PHONY: web-server
 
 web-service: ## Build the Web Service container
-	$(MAKE) -c $@ $@
+	$(MAKE) -C $@ $@
 .PHONY: web-service
