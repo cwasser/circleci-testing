@@ -67,7 +67,7 @@ jobs:
           name: Execute Web Service Tests
           command: composer test
       - store_artifacts:
-          path: web-service/target/logs/coverage
+          path: target/logs/coverage
 
 #      - run:
 #          name: Install Dependencies
