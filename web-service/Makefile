@@ -25,6 +25,10 @@ cleaner: clean ## Cleanup artifacts and dependencies
 	rm -fr vendor/
 .PHONY: cleaner
 
+clear-cache: ## Clear caches
+	$(call COMPOSER)
+.PHONY: clear-cache
+
 install: composer.json ## Install dependencies
 composer.json: composer.lock
 composer.lock: vendor/autoload.php

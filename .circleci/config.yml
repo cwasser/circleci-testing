@@ -63,24 +63,17 @@ jobs:
       - attach_workspace: {at: /src}
       - restore_cache:
           keys: [composer]
-          paths: [/root/.composer]
+          paths:
+            - /root/.composer
+            - /src/web-service/vendor
       - run: composer install --no-suggest
       - save_cache:
           key: composer-{{ checksum "composer.lock" }}
-          paths: [/root/.composer]
+          paths:
+            - /root/.composer
+            - /src/web-service/vendor
       - run: composer test
-      - store_artifacts:
-          path: code-coverage
-
-#      - run:
-#          name: Install Dependencies
-#          command: make -C web-service install VERBOSE=1
-#      - save_cache:
-#          key: composer
-#          paths: [/var/cache/composer]
-#      - run:
-#          name: Execute Web Service Tests
-#          command: make -c web-service test VERBOSE=1
+      - store_artifacts: {path: code-coverage}
 
   # TODO only build image if their Dockerfile has changed!
 #  build_web_server:
