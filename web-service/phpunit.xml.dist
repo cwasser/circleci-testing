@@ -18,7 +18,6 @@
 	</filter>
 
 	<logging>
-		<log target="target/logs/clover.xml" type="coverage-clover"/>
 		<log target="target/logs/coverage" type="coverage-html"/>
 	</logging>
 
