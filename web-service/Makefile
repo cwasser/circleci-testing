@@ -2,7 +2,8 @@ __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 include ../resources/make/functions.mk
 
-COMPOSER_IMAGE := web-service-test
+COMPOSER_EX = $(call composer,web-service-test,$(1))
+COMPOSER    = $(call COMPOSER_EX,$@)
 
 help: ## Display this help
 	@printf "$(FG_YELLOW)Usage:$(RESET)\n    make [flags] [target] [options]\n\n"
@@ -16,11 +17,11 @@ help: ## Display this help
 	@printf "\n$(FG_YELLOW)Pro-tip:$(RESET) use $(FG_GRAY)make -j \`nproc\` [target]$(RESET) for parallel execution.\n\n"
 .PHONY: help
 
-clean: ## Cleanup build artifacts
+clean: ## Cleanup artifacts
 	rm -fr target/
 .PHONY: clean
 
-cleaner: clean ## Cleanup build artifacts and dependencies
+cleaner: clean ## Cleanup artifacts and dependencies
 	rm -fr vendor/
 .PHONY: cleaner
 
@@ -28,15 +29,15 @@ install: composer.json ## Install dependencies
 composer.json: composer.lock
 composer.lock: vendor/autoload.php
 vendor/autoload.php:
-	$(call composer,$(COMPOSER_IMAGE),install --no-suggest)
+	$(call COMPOSER_EX,install --no-suggest)
 	touch $@
 
 test: install ## Run all tests
-	$(call composer,$(COMPOSER_IMAGE),$@ --no-suggest)
+	$(call COMPOSER)
 .PHONY: test
 
 update: composer.json ## Update dependencies
-	$(call composer,$(COMPOSER_IMAGE),$@)
+	$(call COMPOSER)
 .PHONY: update
 
 WEB_SERVICE_TAG ?= latest
