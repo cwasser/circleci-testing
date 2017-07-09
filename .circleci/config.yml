@@ -48,12 +48,12 @@ jobs:
           name: Install Dependencies
           command: |
             cd web-service
-            make install
+            make install VERBOSE=1
       - run:
           name: Execute Web Service Tests
           command: |
             cd web-service
-            make test
+            make test VERBOSE=1
       # TODO Push to registry
 
   # TODO only build image if their Dockerfile has changed!
