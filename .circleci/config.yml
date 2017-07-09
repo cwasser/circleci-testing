@@ -24,8 +24,12 @@ jobs:
       - attach_workspace: {at: *src}
       - setup_remote_docker
       - restore_cache:
-          keys: ['web-service-test-{{ .Branch }}']
-          paths: ['/var/cache/web-service-test.tar']
+          keys:
+            - composer
+            - web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
+          paths:
+            - /var/cache/composer
+            - /var/cache/docker/web-service-test.tar
       - run:
           name: Load Docker Cache
           command: |
@@ -40,20 +44,28 @@ jobs:
           name: Save Docker Cache
           command: |
             mkdir -p /var/cache
-            docker save -o /var/cache/web-service-test.tar fleshgrinder/web-service-test
+            docker save -o /var/cache/docker/web-service-test.tar fleshgrinder/web-service-test
       - save_cache:
-          key: web-service-test-{{ .Branch }}-{{ epoch }}
-          paths: ['/var/cache/web-service-test.tar']
+          key: web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
+          paths: [/var/cache/docker/web-service-test.tar]
+      - run:
+          name: Load Composer Cache
+          command: |
+            mkdir -p target/cache
+            ln -s target/cache/composer /var/cache/composer
       - run:
           name: Install Dependencies
           command: |
             cd web-service
             make install VERBOSE=1
-      - run:
-          name: Execute Web Service Tests
-          command: |
-            cd web-service
-            make test VERBOSE=1
+#      - save_cache:
+#          key: composer
+#          paths: [/var/cache/composer]
+#      - run:
+#          name: Execute Web Service Tests
+#          command: |
+#            cd web-service
+#            make test VERBOSE=1
       # TODO Push to registry
 
   # TODO only build image if their Dockerfile has changed!

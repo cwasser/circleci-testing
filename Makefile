@@ -14,6 +14,10 @@ help: ## Display this help
 	@printf "\n$(FG_YELLOW)Pro-tip:$(RESET) use $(FG_GRAY)make -j \`nproc\` [target]$(RESET) for parallel execution.\n\n"
 .PHONY: help
 
+cache-clear: ## Cleanup caches
+	rm -fr target/
+.PHONY: cache-clear
+
 docker-clean: ## Cleanup unused docker resources
 	docker system prune --force
 .PHONY: docker-clean
