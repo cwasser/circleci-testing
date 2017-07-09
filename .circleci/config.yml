@@ -35,12 +35,9 @@ jobs:
           name: Build Web Service Test
           command: |
             COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            echo "${COMMIT_RANGE}"
-            RESULT=$(git diff "${COMMIT_RANGE}" --name-status | grep web-service/Dockerfile.web-service-test)
-            echo "${RESULT}"
-            if [ "${RESULT}" = "" ]
-              then touch /tmp/skip-web-service-test
-              else make -C web-service web-service-test
+            if git diff "${COMMIT_RANGE}" --name-status | grep web-service/Dockerfile.web-service-test
+              then make -C web-service web-service-test
+              else touch /tmp/skip-web-service-test
             fi
       - run:
           name: Save Docker Cache
