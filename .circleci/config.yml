@@ -17,6 +17,17 @@ jobs:
       - checkout
       - persist_to_workspace: {root: *src, paths: [.]}
 
+  should_build_web_service_test:
+    <<: *alpine_git
+    steps:
+      - attach_workspace: {at: *src}
+      - run:
+          name: Determine if Web Service Test should be built
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            RESULT=$(git diff "${COMMIT_RANGE}" --name-status | grep web-service/Dockerfile.web-service-test)
+            test "${RESULT}" != ""
+
   build_web_service_test:
     <<: *docker_buildpack
     steps:
@@ -56,15 +67,11 @@ jobs:
       - restore_cache:
           keys: [composer]
           paths: [/root/.composer]
-      - run:
-          name: Install Dependencies
-          command: composer install --no-suggest
+      - run: composer install --no-suggest
       - save_cache:
           key: composer
           paths: [/root/.composer]
-      - run:
-          name: Execute Web Service Tests
-          command: composer test
+      - run: composer test
       - store_artifacts:
           path: target/logs/coverage
 
@@ -141,9 +148,12 @@ workflows:
   pipeline:
     jobs:
       - checkout
-      - build_web_service_test:
+      - should_build_web_service_test:
           filters: {branches: {only: [master]}}
           requires: [checkout]
+      - build_web_service_test:
+          filters: {branches: {only: [master]}}
+          requires: [should_build_web_service_test]
       - test_web_service:
           requires: [checkout, build_web_service_test]
 #      - build_web_server:
