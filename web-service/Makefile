@@ -31,7 +31,7 @@ composer.lock: vendor/autoload.php
 vendor/autoload.php:
 	docker run \
 		-v $(__DIR__)://usr/local/src \
-		-v $(__DIR__)../target/cache/composer://root/.composer \
+		-v //var/cache/composer://root/.composer \
 		--entrypoint ls \
 		--rm \
 		-ti \
