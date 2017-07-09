@@ -36,12 +36,12 @@ jobs:
             COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
             if git diff "${COMMIT_RANGE}" --name-status | grep web-service/Dockerfile.web-service-test
               then make -C web-service web-service-test
-              else touch /tmp/skip-web-service-test
+              else touch /skip
             fi
       - run:
           name: Save Docker Cache
           command: |
-            if [ ! -f /skip-web-service-test ]; then
+            if [ ! -f /skip ]; then
               mkdir -p /cache/docker
               docker save -o /cache/docker/web-service-test.tar fleshgrinder/web-service-test
             fi
@@ -51,7 +51,7 @@ jobs:
       - run:
           name: Push Docker Image
           command: |
-            if [ ! -f /skip-web-service-test ]; then
+            if [ ! -f /skip ]; then
               docker login -u fleshgrinder -p "${DOCKER_PASS}"
               docker push fleshgrinder/web-service-test:latest
             fi
