@@ -1,5 +1,6 @@
 # git-scm.com/docs/gitignore
 
 .idea/
+code-coverage/
 target/
 vendor/

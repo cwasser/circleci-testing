@@ -1,36 +1,35 @@
 version: 2
 
-src: &src /usr/local/src
-
 alpine: &alpine
   docker: [{image: fleshgrinder/alpine-git-tar}]
-  working_directory: *src
+  working_directory: /src
 
 docker_buildpack: &docker_buildpack
   docker: [{image: fleshgrinder/docker-buildpack}]
-  working_directory: *src
+  working_directory: /src
 
 jobs:
   checkout:
     <<: *alpine
     steps:
       - checkout
-      - persist_to_workspace: {root: *src, paths: [.]}
+      - persist_to_workspace: {root: /src, paths: [.]}
 
   build_web_service_test:
     <<: *docker_buildpack
     steps:
-      - attach_workspace: {at: *src}
+      - attach_workspace: {at: /src}
       - setup_remote_docker
       - restore_cache:
           keys:
             - web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
-          paths: [/var/cache/docker/web-service-test.tar]
+          paths: [/cache/docker/web-service-test.tar]
       - run:
           name: Load Docker Cache
           command: |
             set +o pipefail
-            docker load -i /var/cache/web-service-test.tar | true
+            docker load -i /cache/docker/web-service-test.tar | true
+            docker images
       - run:
           name: Build Web Service Test
           command: |
@@ -42,36 +41,36 @@ jobs:
       - run:
           name: Save Docker Cache
           command: |
-            if [ ! -f /tmp/skip-web-service-test ]; then
-              mkdir -p /var/cache/docker
-              docker save -o /var/cache/docker/web-service-test.tar fleshgrinder/web-service-test
+            if [ ! -f /skip-web-service-test ]; then
+              mkdir -p /cache/docker
+              docker save -o /cache/docker/web-service-test.tar fleshgrinder/web-service-test
             fi
       - save_cache:
           key: web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
-          paths: [/var/cache/docker/web-service-test.tar]
+          paths: [/cache/docker/web-service-test.tar]
       - run:
           name: Push Docker Image
           command: |
-            if [ ! -f /tmp/skip-web-service-test ]; then
+            if [ ! -f /skip-web-service-test ]; then
               docker login -u fleshgrinder -p "${DOCKER_PASS}"
               docker push fleshgrinder/web-service-test:latest
             fi
 
   test_web_service:
     docker: [{image: fleshgrinder/web-service-test}]
-    working_directory: /usr/local/src/web-service
+    working_directory: /src/web-service
     steps:
-      - attach_workspace: {at: *src}
+      - attach_workspace: {at: /src}
       - restore_cache:
           keys: [composer]
           paths: [/root/.composer]
       - run: composer install --no-suggest
       - save_cache:
-          key: composer
+          key: composer-{{ checksum "composer.lock" }}
           paths: [/root/.composer]
       - run: composer test
       - store_artifacts:
-          path: target/logs/coverage
+          path: code-coverage
 
 #      - run:
 #          name: Install Dependencies
@@ -87,7 +86,7 @@ jobs:
 #  build_web_server:
 #    <<: *docker_buildpack
 #    steps:
-#      - attach_workspace: {at: *src}
+#      - attach_workspace: {at: /src}
 #      - setup_remote_docker
 #      - restore_cache:
 #          keys: ['web-server-{{ .Branch }}']
@@ -116,7 +115,7 @@ jobs:
 #  build_web_service:
 #    <<: *docker_buildpack
 #    steps:
-#      - attach_workspace: {at: *src}
+#      - attach_workspace: {at: /src}
 #      - setup_remote_docker
 #      - restore_cache:
 #          keys: ['web-service-{{ .Branch }}']
