@@ -45,6 +45,11 @@ jobs:
           key: web-service-test-{{ .Branch }}-{{ epoch }}
           paths: ['/var/cache/web-service-test.tar']
       - run:
+          name: Install Dependencies
+          command: |
+            cd web-service
+            make install
+      - run:
           name: Execute Web Service Tests
           command: |
             cd web-service
