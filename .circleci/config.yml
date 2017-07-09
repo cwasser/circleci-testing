@@ -16,7 +16,7 @@ jobs:
       - setup_remote_docker
       - restore_cache:
           keys:
-            - v1-web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
+            - v1-web-service-test-{{ checksum "Dockerfile.web-service-test" }}
             - v1-web-service-test
           paths: [/cache/docker/web-service-test.tar]
       - run:
@@ -40,7 +40,7 @@ jobs:
               mkdir -p /cache/docker && \
               docker save -o /cache/docker/web-service-test.tar fleshgrinder/web-service-test
       - save_cache:
-          key: v1-web-service-test-{{ checksum "web-service/Dockerfile.web-service-test" }}
+          key: v1-web-service-test-{{ checksum "Dockerfile.web-service-test" }}
           paths: [/cache/docker/web-service-test.tar]
       - run:
           name: Push Docker Image
