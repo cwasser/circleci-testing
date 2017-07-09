@@ -11,9 +11,7 @@ server {
 			internal;
 
 			include includes/fastcgi-parameter.ngx;
-			fastcgi_param PATH_TRANSLATED /src/webapp$fastcgi_path_info;
-			fastcgi_param SCRIPT_FILENAME /src/webapp$fastcgi_script_name;
-			fastcgi_pass hsw-service:9000;
+			fastcgi_pass web-service:9000;
 
 			try_files $uri =404;
 		}

@@ -1,7 +1,7 @@
 FROM debian:stretch-slim
 
 ENTRYPOINT ["/usr/local/sbin/php-fpm"]
-CMD ["-y", "/srv/www/config/php/fpm.ini"]
+CMD ["-y", "/usr/local/etc/php/fpm.ini"]
 STOPSIGNAL SIGQUIT
 WORKDIR /srv/www
 
@@ -16,7 +16,7 @@ set -exu;\
 \
 readonly PHP_VERSION=7.1.7;\
 readonly PHP_DIGEST=0d42089729be7b2bb0308cbe189c2782f9cb4b07078c8a235495be5874fff729;\
-readonly BUILD_DEPS='build-essential ca-certificates curl gnupg re2c';\
+readonly BUILD_DEPS='build-essential ca-certificates curl file gnupg re2c';\
 \
 mkdir -p /etc/dpkg/dpkg.conf.d;\
 echo 'path-exclude /usr/share/doc-base/*' > /etc/dpkg/dpkg.conf.d/01_nodoc;\
@@ -44,17 +44,19 @@ tar -xJf php.tar.xz;\
 adduser --system --group --disabled-password --disabled-login --no-create-home php;\
 \
 cd /usr/local/src/php-${PHP_VERSION};\
-export CFLAGS='-fstack-protector-strong -fpic -fpie -O2 -pipe';\
+export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\
 export PHP_CPPFLAGS="${CFLAGS}";\
-export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu,-z,relro,-z,now';\
+export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu';\
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
---with-config-file-path=/srv/www/config/php \
---with-config-file-scan-dir=/srv/www/config/php/conf.d \
+--with-config-file-path=/usr/local/etc/php \
+--with-config-file-scan-dir=/usr/local/etc/php/conf.d \
 --with-libdir="lib/$(dpkg-architecture --query DEB_BUILD_MULTIARCH)" \
+--with-pic \
 \
 --disable-cgi \
 --disable-cli \
+--disable-phpdbg \
 --disable-rpath \
 --disable-short-tags \
 --enable-fpm \
@@ -75,7 +77,7 @@ export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu,-z,relro,-z,now';\
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
---with-pic;\
+;\
 make -sj `nproc`;\
 make -s install;\
 strip --strip-all /usr/local/sbin/php-fpm;\
@@ -90,7 +92,12 @@ rm -rf \
 /etc/dpkg/dpkg.conf.d/ \
 /root/.gnupg/ \
 /tmp/* \
+/usr/local/bin/php-config \
+/usr/local/bin/phpize \
 /usr/local/etc/nginx/ \
+/usr/local/include/php/ \
+/usr/local/lib/php/ \
+/usr/local/php/man/ \
 /usr/local/src/* \
 /usr/share/doc-base/ \
 /usr/share/doc/ \

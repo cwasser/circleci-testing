@@ -25,8 +25,10 @@ WEB_SERVER_TAG ?= latest
 web-server: Dockerfile.web-server ## Build the production image
 	$(call docker_build,$(WEB_SERVER_TAG))
 	touch $<
+Dockerfile.web-server: dockerfiles
 
 WEB_SERVER_DEBUG_TAG ?= latest
 web-server-debug: Dockerfile.web-server-debug ## Build the debug image
 	$(call docker_build,$(WEB_SERVER_DEBUG_TAG))
 	touch $<
+Dockerfile.web-server-debug: dockerfiles

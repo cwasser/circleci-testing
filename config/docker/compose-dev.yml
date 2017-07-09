@@ -1,0 +1,24 @@
+version: '3.0'
+
+services:
+  web-server:
+    build:
+      context: ../../web-server
+    image: fleshgrinder/web-server
+    links:
+      - web-service
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - '../../web-server/config/nginx:/usr/local/etc/nginx:ro'
+      - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
+
+  web-service:
+    build:
+      context: ../../web-service
+    image: fleshgrinder/web-service
+    volumes:
+      - '../../web-service/config/php:/usr/local/etc/php:ro'
+      - '../../web-service/src/main/php:/srv/www/web-service/src/main/php:ro'
+      - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'

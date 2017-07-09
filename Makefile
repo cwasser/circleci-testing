@@ -14,6 +14,10 @@ help: ## Display this help
 	@printf "\n$(FG_YELLOW)Pro-tip:$(RESET) use $(FG_GRAY)make -j \`nproc\` [target]$(RESET) for parallel execution.\n\n"
 .PHONY: help
 
+dev-server: ## Create development server
+	docker-compose --file config/docker/compose-dev.yml up --abort-on-container-exit --remove-orphans
+.PHONY: dev-server
+
 docker-clean: ## Cleanup unused docker resources
 	docker system prune --force
 .PHONY: docker-clean

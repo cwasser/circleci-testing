@@ -77,10 +77,10 @@ adduser --system --group --disabled-password --disabled-login --no-create-home n
 --prefix=/usr/local \
 --sbin-path=/usr/local/sbin \
 \
---with-cc-opt='-fstack-protector-strong -fpic -fpie -O2 -pipe' \
---with-ld-opt='-pie -s -Wl,-O1 -Wl,--hash-style,gnu,-z,relro,-z,now' \
+--with-cc-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe' \
+--with-ld-opt='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' \
 \
---conf-path=/srv/www/hsw-server/config/nginx/main.ngx \
+--conf-path=/usr/local/etc/nginx/main.ngx \
 --error-log-path=/var/log/nginx/error.log \
 --http-log-path=/var/log/nginx/access.log \
 \
@@ -92,13 +92,13 @@ adduser --system --group --disabled-password --disabled-login --no-create-home n
 <?php endif ?>
 --with-http_ssl_module \
 --with-http_v2_module \
---with-openssl-opt='-fstack-protector-strong -fpic -fpie -pipe enable-ec_nistp_64_gcc_128 no-comp -no-deprecated no-dso no-dtls no-dynamic-engine no-engine no-err no-heartbeats no-idea no-md2 no-md4 no-mdc2 no-rc2 no-rc4 no-rc5 no-static-engine' \
+--with-openssl-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -pipe enable-ec_nistp_64_gcc_128 no-comp -no-deprecated no-dso no-dtls no-dynamic-engine no-engine no-err no-heartbeats no-idea no-md2 no-md4 no-mdc2 no-rc2 no-rc4 no-rc5 no-static-engine' \
 --with-openssl=../openssl \
 --with-pcre=../pcre \
 --with-pcre-jit \
---with-pcre-opt='-fstack-protector-strong -fpic -fpie -O2 -pipe' \
+--with-pcre-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe' \
 --with-zlib=../zlib \
---with-zlib-opt='-fstack-protector-strong -fpic -fpie -O2 -pipe' \
+--with-zlib-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe' \
 \
 --without-http_access_module \
 --without-http_auth_basic_module \
