@@ -19,7 +19,6 @@ jobs:
 
   build_web_service_test:
     <<: *docker_buildpack
-    branch: {only: [master]}
     steps:
       - attach_workspace: {at: *src}
       - setup_remote_docker
@@ -143,9 +142,10 @@ workflows:
     jobs:
       - checkout
       - build_web_service_test:
+          filters: {branches: {only: [master]}}
           requires: [checkout]
       - test_web_service:
-          requires: [build_web_service_test]
+          requires: [checkout, build_web_service_test]
 #      - build_web_server:
 #          requires: [test_web_service]
 #      - build_web_service:
