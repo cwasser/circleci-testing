@@ -1,9 +1,10 @@
-version: '3.0'
+version: '3.1'
 
 services:
   web-server:
     build:
       context: ../../web-server
+      dockerfile: Dockerfile.web-server
     image: fleshgrinder/web-server
     links:
       - web-service
@@ -17,6 +18,7 @@ services:
   web-service:
     build:
       context: ../../web-service
+      dockerfile: Dockerfile.web-service
     image: fleshgrinder/web-service
     volumes:
       - '../../web-service/config/php:/usr/local/etc/php:ro'

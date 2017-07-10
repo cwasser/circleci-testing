@@ -16,6 +16,7 @@ set -exu;\
 \
 readonly PHP_VERSION=7.1.7;\
 readonly PHP_DIGEST=0d42089729be7b2bb0308cbe189c2782f9cb4b07078c8a235495be5874fff729;\
+readonly GRPC_VERSION=v1.4.x;\
 readonly BUILD_DEPS='build-essential ca-certificates curl file gnupg re2c';\
 \
 mkdir -p /etc/dpkg/dpkg.conf.d;\
@@ -40,17 +41,18 @@ echo "${PHP_DIGEST} *php.tar.xz" | sha256sum -c -;\
 curl -sLSo php.tar.xz.asc https://secure.php.net/get/php-${PHP_VERSION}.tar.xz.asc/from/this/mirror;\
 gpg --batch --verify php.tar.xz.asc php.tar.xz;\
 tar -xJf php.tar.xz;\
+mv php-${PHP_VERSION} php;\
 \
+cd /usr/local/src/php;\
 adduser --system --group --disabled-password --disabled-login --no-create-home php;\
 \
-cd /usr/local/src/php-${PHP_VERSION};\
 export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\
 export PHP_CPPFLAGS="${CFLAGS}";\
-export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu';\
+export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 --with-config-file-path=/usr/local/etc/php \
---with-config-file-scan-dir=/usr/local/etc/php/conf.d \
+--with-config-file-scan-dir=/usr/local/etc/php/fpm-enabled \
 --with-libdir="lib/$(dpkg-architecture --query DEB_BUILD_MULTIARCH)" \
 --with-pic \
 \
@@ -75,16 +77,31 @@ export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu';\
 --enable-mysqlnd \
 --enable-opcache \
 --with-mysqli=mysqlnd \
+--with-pear \
 --with-pcre-jit \
 --with-pcre-regex \
 ;\
-make -sj `nproc`;\
-make -s install;\
+make -sj`nproc`;\
+make install;\
 strip --strip-all /usr/local/sbin/php-fpm;\
 \
 mkdir -p /var/log/php;\
 ln -sf /dev/stdout /var/log/php/access.log;\
 ln -sf /dev/stderr /var/log/php/error.log;\
+\
+which pear || true;\
+\
+#cd /usr/local/src;\
+#git clone -b "${GRPC_VERSION}" https://github.com/grpc/grpc;\
+#cd grpc;\
+#git pull --recurse-submodules;\
+#git submodule update --init --recursive;\
+#make -sj`nproc`;\
+#cd grpc/src/php/ext/grpc;\
+#phpize;\
+#./configure;\
+#make -sj`nproc`;\
+#make install;\
 \
 apt-get purge -qy --auto-remove ${BUILD_DEPS};\
 apt-get clean -qy;\
@@ -96,7 +113,6 @@ rm -rf \
 /usr/local/bin/phpize \
 /usr/local/etc/nginx/ \
 /usr/local/include/php/ \
-/usr/local/lib/php/ \
 /usr/local/php/man/ \
 /usr/local/src/* \
 /usr/share/doc-base/ \

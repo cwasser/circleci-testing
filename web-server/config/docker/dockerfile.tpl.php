@@ -115,7 +115,7 @@ adduser --system --group --disabled-password --disabled-login --no-create-home n
 --without-http_userid_module \
 --without-http_uwsgi_module;\
 make -sj `nproc`;\
-make -s install;\
+make install;\
 strip --strip-all /usr/local/sbin/nginx;\
 mkdir -p /var/cache/nginx/client-bodies /var/cache/nginx/fastcgi;\
 \
