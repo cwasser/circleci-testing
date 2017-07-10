@@ -22,37 +22,40 @@ ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8"
 COPY resources/vendor-keys.pub /usr/local/src/vendor-keys.pub
 
 RUN set -exu;\
-\
+#
+# ------------------------------------------------------------------------------ Config
+#
 readonly NGINX_VERSION=<?= $config['nginx']['version'] ?>;\
 readonly NGINX_DIGEST=<?= $config['nginx']['digest'] ?>;\
-\
 readonly OPENSSL_VERSION=<?= $config['openssl']['version'] ?>;\
 readonly OPENSSL_DIGEST=<?= $config['openssl']['digest'] ?>;\
-\
 readonly PCRE_VERSION=<?= $config['pcre']['version'] ?>;\
 readonly PCRE_DIGEST=<?= $config['pcre']['digest'] ?>;\
-\
 readonly ZLIB_VERSION=<?= $config['zlib']['version'] ?>;\
 readonly ZLIB_DIGEST=<?= $config['zlib']['digest'] ?>;\
-\
 readonly BUILD_DEPS='build-essential ca-certificates curl gnupg';\
-\
+#
+# ------------------------------------------------------------------------------
+#
+info() { printf '\n\033[33m%s\033[0m\n\n' "$1"; };\
+apt_update() { apt-get update -qq; };\
+apt_install() { apt-get install -qqy --auto-remove --no-install-recommends --no-install-suggests $*; };\
+#
 mkdir -p /etc/dpkg/dpkg.conf.d;\
-echo 'path-exclude /usr/share/doc-base/*' > /etc/dpkg/dpkg.conf.d/01_nodoc;\
-echo 'path-exclude /usr/share/doc/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-echo 'path-exclude /usr/share/groff/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-echo 'path-exclude /usr/share/info/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-echo 'path-exclude /usr/share/linda/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-echo 'path-exclude /usr/share/lintian/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-echo 'path-exclude /usr/share/man/*' >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-\
+touch /etc/dpkg/dpkg.conf.d/01_nodoc;\
+for e in 'doc-base doc groff info linda lintian man';\
+	do echo "path-exclude /usr/share/${e}/*" >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
+done;\
+#
 cd /usr/local/src;\
-apt-get update -q;\
-apt-get install -q -y --auto-remove --no-install-recommends --no-install-suggests ${BUILD_DEPS};\
-\
+info 'installing build dependencies';\
+apt_update;\
+apt_install ${BUILD_DEPS};\
+#
+info 'importing vendor GPG keys';\
 gpg --import vendor-keys.pub;\
-rm /usr/local/src/vendor-keys.pub;\
-\
+#
+info 'downloading dependencies';\
 echo '#!/bin/sh' > dl;\
 echo 'curl -sLSo $2.tar.gz $1/$2-$3.tar.gz' >> dl;\
 echo 'echo "$4 *$2.tar.gz" | sha256sum -c -' >> dl;\
@@ -61,32 +64,33 @@ echo 'gpg --batch --verify $2.tar.gz.$5 $2.tar.gz' >> dl;\
 echo 'tar -xzf $2.tar.gz' >> dl;\
 echo 'mv $2-$3 $2' >> dl;\
 chmod +x dl;\
-\
+#
 ./dl 'https://nginx.org/download' 'nginx' "${NGINX_VERSION}" "${NGINX_DIGEST}" 'asc';\
 ./dl 'https://www.openssl.org/source' 'openssl' "${OPENSSL_VERSION}" "${OPENSSL_DIGEST}" 'asc';\
 ./dl 'ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre' 'pcre' "${PCRE_VERSION}" "${PCRE_DIGEST}" 'sig';\
 ./dl 'http://zlib.net' 'zlib' "${ZLIB_VERSION}" "${ZLIB_DIGEST}" 'asc';\
-\
+#
+info "building and installing nginx ${NGINX_VERSION}";\
 cd nginx; \
 adduser --system --group --disabled-password --disabled-login --no-create-home nginx;\
 ./configure \
-\
+#
 --user=nginx \
 --group=nginx \
-\
+#
 --prefix=/usr/local \
 --sbin-path=/usr/local/sbin \
-\
+#
 --with-cc-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe' \
 --with-ld-opt='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' \
-\
+#
 --conf-path=/usr/local/etc/nginx/main.ngx \
 --error-log-path=/var/log/nginx/error.log \
 --http-log-path=/var/log/nginx/access.log \
-\
+#
 --http-client-body-temp-path=/var/cache/nginx/client-bodies \
 --http-fastcgi-temp-path=/var/cache/nginx/fastcgi \
-\
+#
 <?php if ($debug): ?>
 --with-debug \
 <?php endif ?>
@@ -99,7 +103,7 @@ adduser --system --group --disabled-password --disabled-login --no-create-home n
 --with-pcre-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe' \
 --with-zlib=../zlib \
 --with-zlib-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe' \
-\
+#
 --without-http_access_module \
 --without-http_auth_basic_module \
 --without-http_autoindex_module \
@@ -118,11 +122,12 @@ make -sj `nproc`;\
 make install;\
 strip --strip-all /usr/local/sbin/nginx;\
 mkdir -p /var/cache/nginx/client-bodies /var/cache/nginx/fastcgi;\
-\
+#
 mkdir -p /var/log/nginx;\
 ln -sf /dev/stdout /var/log/nginx/access.log;\
 ln -sf /dev/stderr /var/log/nginx/error.log;\
-\
+#
+info 'cleanup';\
 apt-get purge -q -y --auto-remove ${BUILD_DEPS};\
 apt-get clean -q -y;\
 rm -rf \
@@ -140,5 +145,6 @@ rm -rf \
 /usr/share/man/ \
 /var/lib/apt/lists/* \
 /var/tmp/*;\
-\
+#
+printf '\n\033[32mfinished\033[0m\n\n';\
 nginx -V

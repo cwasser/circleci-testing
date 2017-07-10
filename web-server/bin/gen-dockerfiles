@@ -1,5 +1,13 @@
 #!/usr/bin/env php
 <?php
+/**
+ * Generate the Docker files for building of the nginx images.
+ */
+
+if (in_array('-h', $argv, true) || in_array('--help', $argv, true)) {
+	$binary = basename(__FILE__);
+	exit("{$binary}\nGenerate the Dockerfiles for building of the nginx images.\n\nUSAGE:\n    {$binary} [FLAGS]\n\nFLAGS:\n    -h, --help       Prints help information\n\n");
+}
 
 chdir(__DIR__ . '/..');
 
