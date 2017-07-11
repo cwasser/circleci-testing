@@ -82,58 +82,6 @@ jobs:
           command: composer test
       - store_artifacts: {path: code-coverage}
 
-  build_web_server:
-    docker: [{image: fleshgrinder/docker-buildpack}]
-    working_directory: /src/web-server
-    steps:
-      - attach_workspace: {at: /src}
-      - setup_remote_docker
-      - run:
-          name: Create Dockerfiles
-          command: make dockerfiles
-      - restore_cache:
-          keys:
-            - v1-web-server-{{ checksum "Dockerfile.web-server" }}
-            - v1-web-server
-          paths: [/cache/docker/web-server.tar]
-      - run:
-          name: Load Docker Cache
-          command: |
-            set +o pipefail
-            docker load -i /cache/docker/web-server.tar | true
-            docker images
-      - run:
-          name: Build Web Service Test
-          command: |
-            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-server
-              then make web-server
-              else touch /skip
-            fi
-      - run:
-          name: Save Docker Cache
-          command: |
-            if [ -f /skip ]
-            then
-              echo skipping
-            else
-              mkdir -p /cache/docker
-              docker save -o /cache/docker/web-server.tar fleshgrinder/web-server
-            fi
-      - save_cache:
-          key: v1-web-server-{{ checksum "Dockerfile.web-server" }}
-          paths: [/cache/docker/web-server.tar]
-      - run:
-          name: Push Docker Image
-          command: |
-            if [ -f /skip ] || [ "${CIRCLE_BRANCH}" != master ]
-            then
-              echo skiping
-            else
-              docker login -u fleshgrinder -p "${DOCKER_PASS}"
-              docker push fleshgrinder/web-server:latest
-            fi
-
   build_web_service:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: /src/web-service
@@ -183,6 +131,65 @@ jobs:
               docker push fleshgrinder/web-service:latest
             fi
 
+  generate_web_server_dockerfiles:
+    docker: [{image: circleci/php:cli}]
+    working_directory: /src/web-server
+    steps:
+      - attach_workspace: {at: /src}
+      - run:
+          name: Generate Dockerfiles
+          command: php bin/gen-dockerfiles
+      - persist_to_workspace: {root: /src/web-server, paths: [Dockerfile.web-server]}
+
+  build_web_server:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: /src/web-server
+    steps:
+      - attach_workspace: {at: /src}
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v1-web-server-{{ checksum "Dockerfile.web-server" }}
+            - v1-web-server
+          paths: [/cache/docker/web-server.tar]
+      - run:
+          name: Load Docker Cache
+          command: |
+            set +o pipefail
+            docker load -i /cache/docker/web-server.tar | true
+            docker images
+      - run:
+          name: Build Web Service Test
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-server
+              then make web-server
+              else touch /skip
+            fi
+      - run:
+          name: Save Docker Cache
+          command: |
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              mkdir -p /cache/docker
+              docker save -o /cache/docker/web-server.tar fleshgrinder/web-server
+            fi
+      - save_cache:
+          key: v1-web-server-{{ checksum "Dockerfile.web-server" }}
+          paths: [/cache/docker/web-server.tar]
+      - run:
+          name: Push Docker Image
+          command: |
+            if [ -f /skip ] || [ "${CIRCLE_BRANCH}" != master ]
+            then
+              echo skiping
+            else
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-server:latest
+            fi
+
 workflows:
   version: 2
   pipeline:
@@ -193,7 +200,9 @@ workflows:
           requires: [checkout_code]
       - test_web_service:
           requires: [checkout_code, build_web_service_test_image]
-      - build_web_server:
-          requires: [test_web_service]
       - build_web_service:
           requires: [test_web_service]
+      - generate_web_server_dockerfiles:
+          requires: [test_web_service]
+      - build_web_server:
+          requires: [generate_web_server_dockerfiles]
