@@ -1,5 +1,22 @@
 version: 2
 
+workflows:
+  version: 2
+  pipeline:
+    jobs:
+      - checkout_code
+      - build_web_service_test_image:
+          filters: {branches: {only: [master]}}
+          requires: [checkout_code]
+      - test_web_service:
+          requires: [checkout_code, build_web_service_test_image]
+      - build_web_service_image:
+          requires: [test_web_service]
+      - generate_web_server_dockerfiles:
+          requires: [test_web_service]
+      - build_web_server_image:
+          requires: [generate_web_server_dockerfiles]
+
 jobs:
   checkout_code:
     docker: [{image: fleshgrinder/alpine-git-tar}]
@@ -51,7 +68,7 @@ jobs:
           command: |
             if [ -f /skip ]
             then
-              echo skiping
+              echo skipping
             else
               docker login -u fleshgrinder -p "${DOCKER_PASS}"
               docker push fleshgrinder/web-service-test:latest
@@ -82,7 +99,7 @@ jobs:
           command: composer test
       - store_artifacts: {path: code-coverage}
 
-  build_web_service:
+  build_web_service_image:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: /src/web-service
     steps:
@@ -101,35 +118,20 @@ jobs:
             docker images
       - run:
           name: Build Web Service Test
-          command: |
-            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-service
-              then make web-service
-              else touch /skip
-            fi
+          command: make web-service
       - run:
           name: Save Docker Cache
           command: |
-            if [ -f /skip ]
-            then
-              echo skipping
-            else
-              mkdir -p /cache/docker
-              docker save -o /cache/docker/web-service.tar fleshgrinder/web-service
-            fi
+            mkdir -p /cache/docker
+            docker save -o /cache/docker/web-service.tar fleshgrinder/web-service
       - save_cache:
           key: v1-web-service-{{ checksum "Dockerfile.web-service" }}
           paths: [/cache/docker/web-service.tar]
       - run:
           name: Push Docker Image
           command: |
-            if [ -f /skip ] || [ "${CIRCLE_BRANCH}" != master ]
-            then
-              echo skiping
-            else
-              docker login -u fleshgrinder -p "${DOCKER_PASS}"
-              docker push fleshgrinder/web-service:latest
-            fi
+            docker login -u fleshgrinder -p "${DOCKER_PASS}"
+            docker push fleshgrinder/web-service:latest
 
   generate_web_server_dockerfiles:
     docker: [{image: 'circleci/php:cli'}]
@@ -141,7 +143,7 @@ jobs:
           command: php bin/gen-dockerfiles
       - persist_to_workspace: {root: /src/web-server, paths: [Dockerfile.web-server]}
 
-  build_web_server:
+  build_web_server_image:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: /src/web-server
     steps:
@@ -160,49 +162,17 @@ jobs:
             docker images
       - run:
           name: Build Web Service Test
-          command: |
-            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-server
-              then make web-server
-              else touch /skip
-            fi
+          command: make web-server
       - run:
           name: Save Docker Cache
           command: |
-            if [ -f /skip ]
-            then
-              echo skipping
-            else
-              mkdir -p /cache/docker
-              docker save -o /cache/docker/web-server.tar fleshgrinder/web-server
-            fi
+            mkdir -p /cache/docker
+            docker save -o /cache/docker/web-server.tar fleshgrinder/web-server
       - save_cache:
           key: v1-web-server-{{ checksum "Dockerfile.web-server" }}
           paths: [/cache/docker/web-server.tar]
       - run:
           name: Push Docker Image
           command: |
-            if [ -f /skip ] || [ "${CIRCLE_BRANCH}" != master ]
-            then
-              echo skiping
-            else
-              docker login -u fleshgrinder -p "${DOCKER_PASS}"
-              docker push fleshgrinder/web-server:latest
-            fi
-
-workflows:
-  version: 2
-  pipeline:
-    jobs:
-      - checkout_code
-      - build_web_service_test_image:
-          filters: {branches: {only: [master]}}
-          requires: [checkout_code]
-      - test_web_service:
-          requires: [checkout_code, build_web_service_test_image]
-      - build_web_service:
-          requires: [test_web_service]
-      - generate_web_server_dockerfiles:
-          requires: [test_web_service]
-      - build_web_server:
-          requires: [generate_web_server_dockerfiles]
+            docker login -u fleshgrinder -p "${DOCKER_PASS}"
+            docker push fleshgrinder/web-server:latest

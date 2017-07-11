@@ -155,7 +155,4 @@ rm -rf \
 /usr/share/lintian/ \
 /usr/share/man/ \
 /var/lib/apt/lists/* \
-/var/tmp/*;\
-#
-printf '\n\033[32mfinished\033[0m\n\n';\
-php-fpm -v
+/var/tmp/*
