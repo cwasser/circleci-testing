@@ -141,7 +141,7 @@ jobs:
       - run:
           name: Generate Dockerfiles
           command: php bin/gen-dockerfiles
-      - persist_to_workspace: {root: /src, paths: [web-server]}
+      - persist_to_workspace: {root: /src, paths: [web-server/Dockerfile.web-server]}
 
   build_web_server_image:
     docker: [{image: fleshgrinder/docker-buildpack}]

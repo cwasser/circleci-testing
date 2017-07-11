@@ -22,13 +22,11 @@ dockerfiles: ## Generate the docker files
 	fi
 
 WEB_SERVER_TAG ?= latest
-web-server: | Dockerfile.web-server ## Build the production image
+web-server: ## Build the production image
+	[ -f Dockerfile.web-server ] || $(MAKE) dockerfiles
 	$(call docker_build,$(WEB_SERVER_TAG))
-	touch $<
-Dockerfile.web-server: dockerfiles
 
 WEB_SERVER_DEBUG_TAG ?= latest
-web-server-debug: | Dockerfile.web-server-debug ## Build the debug image
+web-server-debug: ## Build the debug image
+	[ -f Dockerfile.web-server ] || $(MAKE) dockerfiles
 	$(call docker_build,$(WEB_SERVER_DEBUG_TAG))
-	touch $<
-Dockerfile.web-server-debug: dockerfiles
