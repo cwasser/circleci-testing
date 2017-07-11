@@ -12,6 +12,11 @@
 	"require": {
 		"behat/behat": "^3.3"
 	},
+	"autoload": {
+		"psr-4": {
+			"Fleshgrinder\\": "src/main/php/Fleshgrinder/"
+		}
+	},
 	"config": {
 		"sort-packages": true
 	},
