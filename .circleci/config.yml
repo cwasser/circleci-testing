@@ -12,8 +12,10 @@ workflows:
           requires: [checkout_code, build_web_service_test_image]
       - build_web_service_image:
           requires: [test_web_service]
-      - build_web_server_image:
+      - generate_web_server_dockerfiles:
           requires: [test_web_service]
+      - build_web_server_image:
+          requires: [generate_web_server_dockerfiles]
 
 jobs:
   checkout_code:
@@ -130,6 +132,16 @@ jobs:
           command: |
             docker login -u fleshgrinder -p "${DOCKER_PASS}"
             docker push fleshgrinder/web-service:latest
+
+  generate_web_server_dockerfiles:
+    docker: [{image: fleshgrinder/web-service-test}]
+    working_directory: /src/web-server
+    steps:
+      - attach_workspace: {at: /src}
+      - run:
+          name: Generate Dockerfiles
+          command: php bin/gen-dockerfiles
+      - persist_to_workspace: {root: /src, paths: [web-server]}
 
   build_web_server_image:
     docker: [{image: fleshgrinder/docker-buildpack}]
