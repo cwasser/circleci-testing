@@ -13,12 +13,12 @@ jobs:
     working_directory: /src/web-service
     steps:
       - attach_workspace: {at: /src}
+      - setup_remote_docker
       - restore_cache:
           keys:
             - v1-web-service-test-{{ checksum "Dockerfile.web-service-test" }}
             - v1-web-service-test
           paths: [/cache/docker/web-service-test.tar]
-      - setup_remote_docker
       - run:
           name: Load Docker Cache
           command: |
@@ -87,6 +87,7 @@ jobs:
     working_directory: /src/web-server
     steps:
       - attach_workspace: {at: /src}
+      - setup_remote_docker
       - run:
           name: Create Dockerfiles
           command: make dockerfiles
@@ -95,7 +96,6 @@ jobs:
             - v1-web-server-{{ checksum "Dockerfile.web-server" }}
             - v1-web-server
           paths: [/cache/docker/web-server.tar]
-      - setup_remote_docker
       - run:
           name: Load Docker Cache
           command: |
@@ -139,12 +139,12 @@ jobs:
     working_directory: /src/web-service
     steps:
       - attach_workspace: {at: /src}
+      - setup_remote_docker
       - restore_cache:
           keys:
             - v1-web-service-{{ checksum "Dockerfile.web-service" }}
             - v1-web-service
           paths: [/cache/docker/web-service.tar]
-      - setup_remote_docker
       - run:
           name: Load Docker Cache
           command: |
