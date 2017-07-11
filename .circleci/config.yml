@@ -164,7 +164,7 @@ jobs:
           name: Build Web Service Test
           # The touch ensures that make believes that the file is up-to-date
           command: |
-            touch Dockerfiles.web-server
+            touch Dockerfile.web-server
             make web-server
       - run:
           name: Save Docker Cache
