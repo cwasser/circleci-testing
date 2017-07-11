@@ -6,6 +6,9 @@
 #
 # TODO provide an alternative image that has a CLI and debugging capabilities
 
+# TODO build protobuf and grpc as dynamic modules (static does not work)
+# TODO http://www.phpinternalsbook.com/build_system/building_extensions.html
+
 FROM debian:stretch-slim
 
 ENTRYPOINT ["/usr/local/sbin/php-fpm", "-y", "/usr/local/etc/php/fpm.ini"]
