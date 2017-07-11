@@ -15,13 +15,11 @@ help: ## Display this help
 .PHONY: help
 
 dockerfiles: ## Generate the docker files
-ifndef $(CI)
 	if command -v php >/dev/null
 		then php bin/gen-dockerfiles
 		else docker run -it --rm --name gen-dockerfiles \
 			-v $(__DIR__)://src -w //src php:cli php bin/gen-dockerfiles
 	fi
-endif
 
 WEB_SERVER_TAG ?= latest
 web-server: Dockerfile.web-server ## Build the production image
