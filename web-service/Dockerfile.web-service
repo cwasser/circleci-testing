@@ -12,18 +12,6 @@ ENTRYPOINT ["/usr/local/sbin/php-fpm", "-y", "/usr/local/etc/php/fpm.ini"]
 STOPSIGNAL SIGQUIT
 WORKDIR /srv/www
 
-# As it stands right now both extensions are broken. Trying to compile them as
-# static extensions with added security fails and reveals various problems. A
-# typical C problem. There is another problem with the Protobuf extension, it
-# supports only Protobuf 3, whereas most of our stuff is Protobuf 2. It seems
-# as if we have to rely on pure PHP implementations for now. :(
-#
-# TODO contribute fixes to both gRPC and Protobuf
-# - https://github.com/google/protobuf/issues?q=is%3Aissue+is%3Aopen+label%3Aphp
-# - https://github.com/grpc/grpc/issues?q=is%3Aissue+is%3Aopen+label%3Alang%2Fphp
-ARG BUILD_GRPC=false
-ARG BUILD_PROTOBUF=false
-
 ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8" \
 	TRV_HSW_SERVICE_PHP_OPCACHE_TTL=86400 \
 	TRV_HSW_SERVICE_PHP_ZEND_ASSERTIONS=0
@@ -54,8 +42,6 @@ readonly BUILD_DEPS='autoconf automake build-essential ca-certificates curl file
 info() { printf '\n\033[33m%s\033[0m\n\n' "$1"; };\
 apt_update() { apt-get update -qq; };\
 apt_install() { apt-get install -qqy --auto-remove --no-install-recommends --no-install-suggests $*; };\
-php_extensions=;\
-add_php_ext() { php_extensions="${php_extensiions} --${1}"; };\
 #
 mkdir -p /etc/dpkg/dpkg.conf.d;\
 touch /etc/dpkg/dpkg.conf.d/01_nodoc;\
@@ -80,24 +66,22 @@ gpg --batch --verify php.tar.xz.asc php.tar.xz;\
 tar -xJf php.tar.xz;\
 mv php-${PHP_VERSION} php;\
 #
-if [ ${BUILD_PROTOBUF} = true ]; then\
-	info "downloading PHP Protobuf extension ${PHP_PROTOBUF_VERSION}";\
-	git clone -qb ${PHP_PROTOBUF_VERSION} --depth 1 https://github.com/google/protobuf.git;\
-	mv protobuf/php/ext/google/protobuf php/ext/protobuf;\
-	add_php_ext with-protobuf;\
-fi;\
+info "downloading PHP Protobuf extension ${PHP_PROTOBUF_VERSION}";\
+git clone -qb ${PHP_PROTOBUF_VERSION} --depth 1 https://github.com/google/protobuf.git;\
+mv protobuf/php/ext/google/protobuf php/ext/protobuf;\
 #
-if [ ${BUILD_GRPC} = true ]; then\
-	info "downloading PHP gRPC extension ${PHP_GRPC_VERSION}";\
-	git clone -qb ${PHP_GRPC_VERSION} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git;\
-	cd grpc;\
-	make -s;\
-	make install;\
-	ldconfig;\
-	cd ..;\
-	mv grpc/src/php/ext/grpc php/ext/grpc;\
-	add_php_ext with-grpc;\
-fi;\
+info "downloading PHP gRPC extension ${PHP_GRPC_VERSION}";\
+git clone -qb ${PHP_GRPC_VERSION} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git;\
+cd grpc;\
+export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -pipe -Wformat -Wformat-security';\
+export CXXFLAGS="${CFLAGS}";\
+export CPPFLAGS="${CFLAGS}";\
+export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
+make -s;\
+make install;\
+ldconfig;\
+cd ..;\
+mv grpc/src/php/ext/grpc php/ext/grpc;\
 #
 info "building and installing php-fpm ${PHP_VERSION}";\
 cd php;\
@@ -131,13 +115,16 @@ adduser --system --group --disabled-password --disabled-login --no-create-home p
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
+--with-grpc \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
-${php_extensions};\
+--with-protobuf \
+;\
 #
 export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\
-export PHP_CPPFLAGS="${CFLAGS}";\
+export CXXFLAGS="${CFLAGS}";\
+export CPPFLAGS="${CFLAGS}";\
 export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
 make -sj`nproc`;\
 make install;\
