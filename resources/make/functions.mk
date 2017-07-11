@@ -35,8 +35,6 @@ endif
 define docker_build =
 	docker build \
 		--cache-from=$@ \
-		--force-rm \
-		--pull \
 		--file Dockerfile.$@ \
 		--tag fleshgrinder/$@:$(1) \
 		.
