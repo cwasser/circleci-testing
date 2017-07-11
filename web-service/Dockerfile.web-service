@@ -125,7 +125,7 @@ adduser --system --group --disabled-password --disabled-login --no-create-home p
 export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\
 export CXXFLAGS="${CFLAGS}";\
 export CPPFLAGS="${CFLAGS}";\
-export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
+export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
 make -sj`nproc`;\
 make install;\
 strip --strip-all /usr/local/sbin/php-fpm;\
