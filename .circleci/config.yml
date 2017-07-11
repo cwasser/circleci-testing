@@ -13,12 +13,12 @@ jobs:
     working_directory: /src/web-service
     steps:
       - attach_workspace: {at: /src}
-      - setup_remote_docker
       - restore_cache:
           keys:
             - v1-web-service-test-{{ checksum "Dockerfile.web-service-test" }}
             - v1-web-service-test
           paths: [/cache/docker/web-service-test.tar]
+      - setup_remote_docker
       - run:
           name: Load Docker Cache
           command: |
@@ -82,6 +82,107 @@ jobs:
           command: composer test
       - store_artifacts: {path: code-coverage}
 
+  build_web_server:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: /src/web-server
+    steps:
+      - attach_workspace: {at: /src}
+      - run:
+          name: Create Dockerfiles
+          command: make dockerfiles
+      - restore_cache:
+          keys:
+            - v1-web-server-{{ checksum "Dockerfile.web-server" }}
+            - v1-web-server
+          paths: [/cache/docker/web-server.tar]
+      - setup_remote_docker
+      - run:
+          name: Load Docker Cache
+          command: |
+            set +o pipefail
+            docker load -i /cache/docker/web-server.tar | true
+            docker images
+      - run:
+          name: Build Web Service Test
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-server
+              then make web-server
+              else touch /skip
+            fi
+      - run:
+          name: Save Docker Cache
+          command: |
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              mkdir -p /cache/docker
+              docker save -o /cache/docker/web-server.tar fleshgrinder/web-server
+            fi
+      - save_cache:
+          key: v1-web-server-{{ checksum "Dockerfile.web-server" }}
+          paths: [/cache/docker/web-server.tar]
+      - run:
+          name: Push Docker Image
+          command: |
+            if [ -f /skip ] || [ "${CIRCLE_BRANCH}" != master ]
+            then
+              echo skiping
+            else
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-server:latest
+            fi
+
+  build_web_service:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: /src/web-service
+    steps:
+      - attach_workspace: {at: /src}
+      - restore_cache:
+          keys:
+            - v1-web-service-{{ checksum "Dockerfile.web-service" }}
+            - v1-web-service
+          paths: [/cache/docker/web-service.tar]
+      - setup_remote_docker
+      - run:
+          name: Load Docker Cache
+          command: |
+            set +o pipefail
+            docker load -i /cache/docker/web-service.tar | true
+            docker images
+      - run:
+          name: Build Web Service Test
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-service
+              then make web-service
+              else touch /skip
+            fi
+      - run:
+          name: Save Docker Cache
+          command: |
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              mkdir -p /cache/docker
+              docker save -o /cache/docker/web-service.tar fleshgrinder/web-service
+            fi
+      - save_cache:
+          key: v1-web-service-{{ checksum "Dockerfile.web-service" }}
+          paths: [/cache/docker/web-service.tar]
+      - run:
+          name: Push Docker Image
+          command: |
+            if [ -f /skip ] || [ "${CIRCLE_BRANCH}" != master ]
+            then
+              echo skiping
+            else
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-service:latest
+            fi
+
 workflows:
   version: 2
   pipeline:
@@ -92,3 +193,7 @@ workflows:
           requires: [checkout_code]
       - test_web_service:
           requires: [checkout_code, build_web_service_test_image]
+      - build_web_server:
+          requires: [test_web_service]
+      - build_web_service:
+          requires: [test_web_service]
