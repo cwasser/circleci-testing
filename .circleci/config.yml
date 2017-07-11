@@ -2,30 +2,33 @@ version: 2
 
 workflows:
   version: 2
-  pipeline:
+  Pipeline:
     jobs:
-      - checkout_code
-      - build_web_service_test_image:
+      - Checkout
+
+      - Build web-service test image:
           filters: {branches: {only: [master]}}
-          requires: [checkout_code]
-      - test_web_service:
-          requires: [checkout_code, build_web_service_test_image]
-      - build_web_service_image:
-          requires: [test_web_service]
-      - generate_web_server_dockerfiles:
-          requires: [test_web_service]
-      - build_web_server_image:
-          requires: [generate_web_server_dockerfiles]
+          requires: [Checkout]
+
+      - Generate web-server Docker files:
+          requires: [Checkout]
+      - Run web-service unit tests:
+          requires: [Checkout, Build web-service test image]
+
+      - Build web-server image:
+          requires: [Generate web-server Docker files]
+      - Build web-service image:
+          requires: [Run web-service unit tests]
 
 jobs:
-  checkout_code:
+  Checkout:
     docker: [{image: fleshgrinder/alpine-git-tar}]
     working_directory: /src
     steps:
       - checkout
       - persist_to_workspace: {root: /src, paths: [.]}
 
-  build_web_service_test_image:
+  Build web-service test image:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: /src/web-service
     steps:
@@ -37,13 +40,13 @@ jobs:
             - v1-web-service-test
           paths: [/cache/docker/web-service-test.tar]
       - run:
-          name: Load Docker Cache
+          name: Load cache
           command: |
             set +o pipefail
             docker load -i /cache/docker/web-service-test.tar | true
             docker images
       - run:
-          name: Build Web Service Test
+          name: Build image
           command: |
             COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
             if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-service-test
@@ -51,7 +54,7 @@ jobs:
               else touch /skip
             fi
       - run:
-          name: Save Docker Cache
+          name: Export image
           command: |
             if [ -f /skip ]
             then
@@ -64,7 +67,7 @@ jobs:
           key: v1-web-service-test-{{ checksum "Dockerfile.web-service-test" }}
           paths: [/cache/docker/web-service-test.tar]
       - run:
-          name: Push Docker Image
+          name: Push image
           command: |
             if [ -f /skip ]
             then
@@ -74,7 +77,17 @@ jobs:
               docker push fleshgrinder/web-service-test:latest
             fi
 
-  test_web_service:
+  Generate web-server Docker files:
+    docker: [{image: fleshgrinder/web-service-test}]
+    working_directory: /src/web-server
+    steps:
+      - attach_workspace: {at: /src}
+      - run:
+          name: Generate Docker files
+          command: php bin/gen-dockerfiles
+      - persist_to_workspace: {root: /src, paths: [web-server/Dockerfile.web-server]}
+
+  Run web-service unit tests:
     docker: [{image: fleshgrinder/web-service-test}]
     working_directory: /src/web-service
     steps:
@@ -87,7 +100,7 @@ jobs:
             - /root/.composer
             - /src/web-service/vendor
       - run:
-          name: Install Dependencies
+          name: Install dependencies
           command: composer install --no-progress --no-suggest
       - save_cache:
           key: v1-composer-{{ checksum "composer.lock" }}
@@ -95,55 +108,11 @@ jobs:
             - /root/.composer
             - /src/web-service/vendor
       - run:
-          name: Execute Tests
+          name: Execute unit tests
           command: composer test
       - store_artifacts: {path: code-coverage}
 
-  build_web_service_image:
-    docker: [{image: fleshgrinder/docker-buildpack}]
-    working_directory: /src/web-service
-    steps:
-      - attach_workspace: {at: /src}
-      - setup_remote_docker
-      - restore_cache:
-          keys:
-            - v1-web-service-{{ checksum "Dockerfile.web-service" }}
-            - v1-web-service
-          paths: [/cache/docker/web-service.tar]
-      - run:
-          name: Load Docker Cache
-          command: |
-            set +o pipefail
-            docker load -i /cache/docker/web-service.tar | true
-            docker images
-      - run:
-          name: Build Web Service Test
-          command: make web-service
-      - run:
-          name: Save Docker Cache
-          command: |
-            mkdir -p /cache/docker
-            docker save -o /cache/docker/web-service.tar fleshgrinder/web-service
-      - save_cache:
-          key: v1-web-service-{{ checksum "Dockerfile.web-service" }}
-          paths: [/cache/docker/web-service.tar]
-      - run:
-          name: Push Docker Image
-          command: |
-            docker login -u fleshgrinder -p "${DOCKER_PASS}"
-            docker push fleshgrinder/web-service:latest
-
-  generate_web_server_dockerfiles:
-    docker: [{image: fleshgrinder/web-service-test}]
-    working_directory: /src/web-server
-    steps:
-      - attach_workspace: {at: /src}
-      - run:
-          name: Generate Dockerfiles
-          command: php bin/gen-dockerfiles
-      - persist_to_workspace: {root: /src, paths: [web-server/Dockerfile.web-server]}
-
-  build_web_server_image:
+  Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: /src/web-server
     steps:
@@ -155,16 +124,16 @@ jobs:
             - v1-web-server
           paths: [/cache/docker/web-server.tar]
       - run:
-          name: Load Docker Cache
+          name: Load cache
           command: |
             set +o pipefail
             docker load -i /cache/docker/web-server.tar | true
             docker images
       - run:
-          name: Build Web Service Test
+          name: Build image
           command: make web-server
       - run:
-          name: Save Docker Cache
+          name: Export image
           command: |
             mkdir -p /cache/docker
             docker save -o /cache/docker/web-server.tar fleshgrinder/web-server
@@ -172,7 +141,45 @@ jobs:
           key: v1-web-server-{{ checksum "Dockerfile.web-server" }}
           paths: [/cache/docker/web-server.tar]
       - run:
-          name: Push Docker Image
+          name: Push image
           command: |
-            docker login -u fleshgrinder -p "${DOCKER_PASS}"
-            docker push fleshgrinder/web-server:latest
+            if [ "${CIRCLE_BRANCH}" = master ]; then
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-server:latest
+            fi
+
+  Build web-service image:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: /src/web-service
+    steps:
+      - attach_workspace: {at: /src}
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v1-web-service-{{ checksum "Dockerfile.web-service" }}
+            - v1-web-service
+          paths: [/cache/docker/web-service.tar]
+      - run:
+          name: Load cache
+          command: |
+            set +o pipefail
+            docker load -i /cache/docker/web-service.tar | true
+            docker images
+      - run:
+          name: Build image
+          command: make web-service
+      - run:
+          name: Export image
+          command: |
+            mkdir -p /cache/docker
+            docker save -o /cache/docker/web-service.tar fleshgrinder/web-service
+      - save_cache:
+          key: v1-web-service-{{ checksum "Dockerfile.web-service" }}
+          paths: [/cache/docker/web-service.tar]
+      - run:
+          name: Push image
+          command: |
+            if [ "${CIRCLE_BRANCH}" = master ]; then
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-service:latest
+            fi
