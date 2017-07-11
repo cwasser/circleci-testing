@@ -132,7 +132,7 @@ jobs:
             fi
 
   generate_web_server_dockerfiles:
-    docker: [{image: circleci/php:cli}]
+    docker: [{image: 'circleci/php:cli'}]
     working_directory: /src/web-server
     steps:
       - attach_workspace: {at: /src}
