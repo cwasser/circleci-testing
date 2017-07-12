@@ -6,9 +6,6 @@
 #
 # TODO provide an alternative image that has a CLI and debugging capabilities
 
-# TODO build protobuf and grpc as dynamic modules (static does not work)
-# TODO http://www.phpinternalsbook.com/build_system/building_extensions.html
-
 FROM debian:stretch-slim
 
 ENTRYPOINT ["/usr/local/sbin/php-fpm", "-y", "/usr/local/etc/php/fpm.ini"]
@@ -118,11 +115,11 @@ adduser --system --group --disabled-password --disabled-login --no-create-home p
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
---with-grpc \
+--with-grpc=static \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
---with-protobuf \
+--with-protobuf=static \
 ;\
 #
 export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\
