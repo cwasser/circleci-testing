@@ -2,16 +2,5 @@
 # the ignored files are not sent to the docker build server, and building is
 # faster because only required files are transfered.
 
-code-coverage/
-config/
-src/
-vendor/
-
-.*ignore
-composer.*
-Dockerfile.*
-Makefile
-phpstan.neon
-phpunit.xml*
-psalm.xml
-README.md
+*
+!resources/docker/vendor-keys.pub

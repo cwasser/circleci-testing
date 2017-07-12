@@ -2,10 +2,5 @@
 # the ignored files are not sent to the docker build server, and building is
 # faster because only required files are transfered.
 
-bin/
-config/
-
-.*ignore
-Dockerfile.*
-Makefile
-README.md
+*
+!resources/docker/vendor-keys.pub
