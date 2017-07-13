@@ -48,8 +48,36 @@ gpg --batch --verify php.tar.xz.asc php.tar.xz && \
 tar -xJf php.tar.xz && \
 mv php-{{php_version}} php && \
 #
+info 'Installing PHP Protobuf extension {{php_protobuf_version}}' && \
+cd /usr/local/src && \
+git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
+cd protobuf && \
+./autogen.sh && \
+./configure --disable-shared && \
+make -sj `nproc` && \
+#make check && \
+make install && \
+ldconfig && \
+cd php/ext/google/protobuf && \
+#
+info 'Installing PHP gRPC extension {{php_grpc_version}}' && \
+cd /usr/local/src && \
+git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
+cd grpc && \
+export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -pipe -Wformat -Wformat-security' && \
+export CXXFLAGS="${CFLAGS}" && \
+export CPPFLAGS="${CFLAGS}" && \
+export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
+make -sj `nproc` static && \
+unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
+make strip-static && \
+make install-static && \
+ldconfig && \
+#
 info 'Configuring PHP {{php_version}}' && \
-cd php && \
+cd /usr/local/src/php && \
+rm configure && \
+./buildconf --force && \
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 --with-config-file-path=/usr/local/etc/php \
@@ -74,10 +102,12 @@ cd php && \
 #
 --disable-all \
 #
+--enable-grpc \
 --enable-json \
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
+--enable-protobuf \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
@@ -97,33 +127,6 @@ strip --strip-all /usr/local/sbin/php-fpm && \
 mkdir -p /var/log/php && \
 ln -sf /dev/stdout /var/log/php/access.log && \
 ln -sf /dev/stderr /var/log/php/error.log && \
-#
-info 'Installing PHP Protobuf extension {{php_protobuf_version}}' && \
-cd /usr/local/src && \
-git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
-cd protobuf/php/ext/google/protobuf && \
-phpize && \
-./configure && \
-make -sj `nproc` && \
-make install && \
-#
-info 'Installing PHP gRPC extension {{php_grpc_version}}' && \
-cd /usr/local/src && \
-git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
-cd grpc && \
-export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -pipe -Wformat -Wformat-security' && \
-export CXXFLAGS="${CFLAGS}" && \
-export CPPFLAGS="${CFLAGS}" && \
-export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
-make -sj `nproc` && \
-unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
-make install && \
-ldconfig && \
-cd src/php/ext/grpc && \
-phpize && \
-./configure && \
-make -sj `nproc` && \
-make install && \
 #
 info 'Cleaning system' && \
 apt-get purge -qqy --auto-remove ${BUILD_DEPS} && \

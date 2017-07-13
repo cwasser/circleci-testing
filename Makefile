@@ -1,33 +1,32 @@
 __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+include resources/make/bootstrap.mk
 
-include resources/make/functions.mk
+clean: ## Clean all artifacts
+	$(MAKE) -C web-service clean
+	$(MAKE) -C web-testing clean
+.PHONY: clean
 
-help: ## Display this help
-	@printf "$(FG_YELLOW)Usage:$(RESET)\n    make [flags] [target] [options]\n\n"
-	@printf "$(FG_YELLOW)Flags:$(RESET)\n    See $(FG_GRAY)make --help$(RESET)\n\n"
-	@printf "$(FG_YELLOW)Targets:$(RESET)\n"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(__DIR__)/Makefile | sort -d | awk 'BEGIN {FS = ":.*?## "}; {printf "    $(FG_GREEN)%-$(HELP_PADDING)s$(RESET) %s\n", $$1, $$2}'
-	@printf "\n$(FG_YELLOW)Options:$(RESET)\n"
-	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set mode to 1 for verbose output $(FG_YELLOW)[default: 0]$(RESET)\n" "VERBOSE=<mode>"
-	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Build the image if it is missing, instead of pulling it $(FG_YELLOW)[default: false]$(RESET)\n" "REBUILD=<bool>"
-	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set the tag for the $(FG_GREEN)web-server$(RESET) target's container $(FG_YELLOW)[default: latest]$(RESET)\n" "WEB_SERVER_TAG=<tag>"
-	@printf "$(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set the tag for the $(FG_GREEN)web-service$(RESET) target's container $(FG_YELLOW)[default: latest]$(RESET)\n" "WEB_SERVICE_TAG=<tag>"
-	@printf "\n$(FG_YELLOW)Pro-tip:$(RESET) use $(FG_GRAY)make -j \`nproc\` [target]$(RESET) for parallel execution.\n\n"
-.PHONY: help
+cleaner: ## Clean all artifacts and dependencies
+	$(MAKE) -C web-service cleaner
+	$(MAKE) -C web-testing cleaner
+.PHONY: cleaner
 
-REBUILD ?= false
-dev-server: ## Pull and start development server (see REBUILD flag)
-	if [ $(REBUILD) != true ]
-		then docker-compose --file config/docker/compose-dev.yml pull --ignore-pull-failures --parallel
-		else [ -f web-server/Dockerfile.web-server ] || $(MAKE) -C web-server dockerfiles
-	fi
-	docker-compose --file config/docker/compose-dev.yml up --abort-on-container-exit --no-recreate --remove-orphans
+dev-server: ## Start development server
+	$(MAKE) run ENV=dev
 .PHONY: dev-server
 
-docker-clean: ## Cleanup unused docker resources
-	docker system prune --force
-.PHONY: docker-clean
+server: ## Start production server
+	$(MAKE) run ENV=prod
+.PHONY: server
 
-docker-cleaner: ## Cleanup all docker resources
-	docker system prune --all --force
-.PHONY: docker-cleaner
+run:
+	docker-compose --file config/docker/compose-$(ENV).yml pull --ignore-pull-failures --parallel
+	[ -f web-server/Dockerfile.web-server-$(ENV) ] || $(MAKE) -C web-server dockerfiles
+#	[ -f web-service/Dockerfile.web-service-$(ENV) ] || $(MAKE) -C web-service dockerfiles
+	docker-compose --file config/docker/compose-$(ENV).yml up --abort-on-container-exit --no-recreate --remove-orphans
+.PHONY: run
+
+test: ## Execute all tests
+	$(MAKE) -C web-service test
+	$(MAKE) -C web-testing test
+.PHONY: test

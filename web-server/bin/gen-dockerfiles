@@ -1,34 +1,16 @@
 #!/usr/bin/env php
 <?php
 
-if (in_array('-h', $argv, true) || in_array('--help', $argv, true)) {
-	$binary = basename(__FILE__);
-	exit("{$binary}\nGenerate the Docker files for building of the web-server images.\n\nUSAGE:\n    {$binary} [FLAGS]\n\nFLAGS:\n    -h, --help       Prints help information\n\n");
-}
+require_once __DIR__ . '/../../resources/docker/gen-dockerfiles.inc';
 
-function gen_dockerfile(array $config, bool $debug): void {
-	if ($debug) {
-		$config['entrypoint'] = '["/usr/local/sbin/nginx", "-g", "error_log /var/log/nginx/error.log debug;"]';
-		$config['with_debug'] = '--with-debug';
-		$suffix               = '-debug';
-	}
-	else {
-		$config['entrypoint'] = '["/usr/local/sbin/nginx"]';
-		$config['with_debug'] = '';
-		$suffix               = '';
-	}
+gen_dockerfiles([
+	'entrypoint' => [
+		'dev'  => '["/usr/local/sbin/nginx", "-g", "error_log /var/log/nginx/error.log debug;"]',
+		'prod' => '["/usr/local/sbin/nginx"]',
+	],
 
-	file_put_contents("Dockerfile.web-server{$suffix}", preg_replace_callback(
-		'/\{\{([a-z\d_]+)\}\}/',
-		function (array $matches) use ($config) {
-			return $config[$matches[1]];
-		},
-		file_get_contents('resources/docker/Dockerfile.template')
-	));
-}
-
-chdir(__DIR__ . '/..');
-
-$config = parse_ini_file('config/docker/config.ini');
-gen_dockerfile($config, true);
-gen_dockerfile($config, false);
+	'debug' => [
+		'dev'  => '--with-debug',
+		'prod' => '',
+	],
+]);
