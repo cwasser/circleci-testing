@@ -6,9 +6,6 @@
 #
 # TODO provide an alternative image that has a CLI and debugging capabilities
 
-# TODO build protobuf and grpc as dynamic modules (static does not work)
-# TODO http://www.phpinternalsbook.com/build_system/building_extensions.html
-
 FROM debian:stretch-slim
 
 ENTRYPOINT ["/usr/local/sbin/php-fpm", "-y", "/usr/local/etc/php/fpm.ini"]
@@ -19,7 +16,7 @@ ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8" \
 	TRV_HSW_SERVICE_PHP_OPCACHE_TTL=86400 \
 	TRV_HSW_SERVICE_PHP_ZEND_ASSERTIONS=0
 
-COPY resources/vendor-keys.pub /usr/local/src/vendor-keys.pub
+COPY resources/docker/vendor-keys.pub /usr/local/src/vendor-keys.pub
 
 RUN set -exu;\
 #
@@ -89,6 +86,7 @@ mv grpc/src/php/ext/grpc php/ext/grpc;\
 info "building and installing php-fpm ${PHP_VERSION}";\
 cd php;\
 adduser --system --group --disabled-password --disabled-login --no-create-home php;\
+rm configure;\
 ./buildconf --force;\
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
@@ -114,15 +112,15 @@ adduser --system --group --disabled-password --disabled-login --no-create-home p
 #
 --disable-all \
 #
+--enable-grpc \
 --enable-json \
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
---with-grpc \
+--enable-protobuf \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
---with-protobuf \
 ;\
 #
 export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\

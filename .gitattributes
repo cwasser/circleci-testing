@@ -6,13 +6,20 @@
 
 .*              hs_txt
 *.ini           hs_txt
+*.json          hs_txt
+*.lock          hs_txt
 *.md            hs_txt
+*.mk            hs_txt
+*.neon          hs_txt
 *.ngx           hs_txt
 *.php           hs_txt diff=php
+*.pub           hs_txt
 *.puml          hs_txt
 *.sh            hs_txt
+*.xml           hs_txt
+*.xml.dist      hs_txt
 *.yml           text eol=lf whitespace=-cr-at-eol,tab-in-indent,-indent-with-non-tab,-space-before-tab,trailing-space
-Dockerfile      hs_txt
+Dockerfile*     hs_txt
 Makefile        hs_txt
 
 [attr]hs_bin    -text diff

@@ -3,7 +3,7 @@
 
 if (in_array('-h', $argv, true) || in_array('--help', $argv, true)) {
 	$binary = basename(__FILE__);
-	exit("{$binary}\nGenerate the Dockerfiles for building of the nginx images.\n\nUSAGE:\n    {$binary} [FLAGS]\n\nFLAGS:\n    -h, --help       Prints help information\n\n");
+	exit("{$binary}\nGenerate the Docker files for building of the web-server images.\n\nUSAGE:\n    {$binary} [FLAGS]\n\nFLAGS:\n    -h, --help       Prints help information\n\n");
 }
 
 function gen_dockerfile(array $config, bool $debug): void {
@@ -23,7 +23,7 @@ function gen_dockerfile(array $config, bool $debug): void {
 		function (array $matches) use ($config) {
 			return $config[$matches[1]];
 		},
-		file_get_contents('config/docker/Dockerfile.template')
+		file_get_contents('resources/docker/Dockerfile.template')
 	));
 }
 

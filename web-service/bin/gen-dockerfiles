@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+
+if (in_array('-h', $argv, true) || in_array('--help', $argv, true)) {
+	$binary = basename(__FILE__);
+	exit("{$binary}\nGenerate the Docker files for building of the web-service images.\n\nUSAGE:\n    {$binary} [FLAGS]\n\nFLAGS:\n    -h, --help       Prints help information\n\n");
+}
+
+function gen_dockerfile(array $config, bool $debug): void {
+	if ($debug) {
+		$config['php_configure_cli']               = '--enable-cli';
+		$config['php_configure_phpdbg']            = '--enable-phpdbg';
+		$config['php_opcache_validate_timestamps'] = 'true';
+		$config['php_zend_assertions']             = 1;
+
+		$suffix = '-debug';
+	}
+	else {
+		$config['php_configure_cli']               = '--disable-cli';
+		$config['php_configure_phpdbg']            = '--disable-phpdbg';
+		$config['php_opcache_validate_timestamps'] = 'false';
+		$config['php_zend_assertions']             = 0;
+
+		$suffix = '';
+	}
+
+	file_put_contents("Dockerfile.web-service{$suffix}", preg_replace_callback(
+		'/\{\{([a-z\d_]+)\}\}/',
+		function (array $matches) use ($config) {
+			return $config[$matches[1]];
+		},
+		file_get_contents('resources/docker/Dockerfile.template')
+	));
+}
+
+chdir(__DIR__ . '/..');
+
+$config = parse_ini_file('config/docker/config.ini');
+gen_dockerfile($config, true);
+gen_dockerfile($config, false);

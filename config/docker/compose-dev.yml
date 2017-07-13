@@ -5,6 +5,8 @@ services:
     build:
       context: ../../web-server
       dockerfile: Dockerfile.web-server
+    domainname: api.fleshgrinder.docker
+    hostname: web-server
     image: fleshgrinder/web-server
     links:
       - web-service
@@ -19,6 +21,8 @@ services:
     build:
       context: ../../web-service
       dockerfile: Dockerfile.web-service
+    domainname: api.fleshgrinder.docker
+    hostname: web-service
     image: fleshgrinder/web-service
     volumes:
       - '../../web-service/config/php:/usr/local/etc/php:ro'
