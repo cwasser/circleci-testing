@@ -15,10 +15,10 @@ help: ## Display this help
 .PHONY: help
 
 dockerfiles: ## Generate the docker files
-	if command -v php >/dev/null
-		then php bin/gen-dockerfiles
+	if command -v php >/dev/null;\
+		then php bin/gen-dockerfiles;\
 		else docker run -it --rm --name gen-dockerfiles \
-			-v $(__DIR__)://src -w //src php:cli php bin/gen-dockerfiles
+			-v $(__DIR__)://src -w //src php:cli php bin/gen-dockerfiles;\
 	fi
 
 WEB_SERVER_TAG ?= latest

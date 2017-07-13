@@ -1,67 +1,48 @@
 <?php
 
 use Behat\Behat\Context\Context;
-use PHPUnit\Framework\Assert;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Process\Process;
 
 /**
  * Defines application features from the specific context.
  */
-class FeatureContext implements Context
-{
+class FeatureContext implements Context  {
+    /** @var Process */
+    private $server;
+
     /**
-     * @var \Symfony\Component\HttpFoundation\Response|null
+     * @Given Microservices are running
      */
-    protected $response;
-
-    protected $server = [];
-
-    /**
-     * Initializes context.
-     *
-     * Every scenario gets its own context instance.
-     * You can also pass arbitrary arguments to the
-     * context constructor through behat.yml.
-     *
-     */
-    public function __construct() {
-    }
-
-    /**
-     * @Given I am in :path
-     * @param string path
-    **/
-    public function iAmInPath (string $path){
-
+    public function microserviceAreRunning() {
+        $this->server = new Process('make dev-server', __DIR__ . '/../../../');
+        $this->server->mustRun();
     }
 
     /**
      * @When I send a request
-    **/
-    public function sendRequest (){
-
+     */
+    public function sendRequest () {
+        $body = file_get_contents('http://api.fleshgrinder.docker/hello-world');
     }
 
     /**
      * @Then I should get a :statusCode response
-     * @param int $statusCode
      */
     public function iShouldGetAResponse(int $statusCode) {
-        Assert::assertEquals($statusCode, $this->response->getStatusCode());
+        assertEquals($statusCode, $this->response->getStatusCode());
     }
 
     /**
-     * @And the response is a json object
-     **/
-    public function responseObjectType (){
-
+     * @And the response is a json string
+     */
+    public function responseObjectType () {
+        $body = file_get_contents('http://api.fleshgrinder.docker/hello-world');
     }
 
     /**
      * @And it contains exactly :message
-     * @param string message
-     **/
-    public function containsMessage (string $message){
-
+     */
+    public function containsMessage (string $message) {
+        assertEquals($message, $this->response->getContent());
     }
 }
