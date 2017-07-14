@@ -1,7 +1,7 @@
 __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include ../resources/make/bootstrap.mk
 
-composer = $(call composer,$@)
+composer = $(call composer_ex,$@)
 define composer_ex =
 	docker run \
 		-it --rm --name composer \
