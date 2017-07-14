@@ -7,42 +7,25 @@ use Symfony\Component\Process\Process;
  * Defines application features from the specific context.
  */
 class FeatureContext implements Context  {
-    /** @var Process */
+    /** @var Process|null */
     private $server;
 
-    /**
-     * @Given Microservices are running
-     */
-    public function microserviceAreRunning() {
+    public function __destruct() {
+        if ($this->server !== \null) {
+            $this->server->stop();
+        }
+    }
+
+    /** @Given API is running */
+    public function apiIsRunning() {
         $this->server = new Process('make dev-server', __DIR__ . '/../../../');
-        $this->server->mustRun();
+        $this->server->start();
+
+        assert($this->server->isRunning());
     }
 
-    /**
-     * @When I send a request
-     */
-    public function sendRequest () {
-        $body = file_get_contents('http://api.fleshgrinder.docker/hello-world');
-    }
-
-    /**
-     * @Then I should get a :statusCode response
-     */
-    public function iShouldGetAResponse(int $statusCode) {
-        assertEquals($statusCode, $this->response->getStatusCode());
-    }
-
-    /**
-     * @And the response is a json string
-     */
-    public function responseObjectType () {
-        $body = file_get_contents('http://api.fleshgrinder.docker/hello-world');
-    }
-
-    /**
-     * @And it contains exactly :message
-     */
-    public function containsMessage (string $message) {
-        assertEquals($message, $this->response->getContent());
+    /** @Then I should get a :body response when I call :url */
+    public function iShouldGetAResponseWhenICall(string $body, string $url): void {
+        assert(file_get_contents($url) === $body);
     }
 }

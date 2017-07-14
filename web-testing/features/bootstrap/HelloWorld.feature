@@ -1,11 +1,6 @@
 @hello_world
-Feature: Get response from microservice
-  After calling the microservice
-  From specified path
-  I need to get "Hello, World!" displayed
+Feature: API is able to respond with "Hello, World!"
 
-  Scenario: Display message from given path
-    Given Microservices are running
-    Then I should get a "200" response
-    And the response is a json string
-    And it contains exactly "message"
+  Scenario: Get "Hello, World!" response from API
+    Given API is running
+    Then I should get a '"Hello, World!"' response when I call "http://api.fleshgrinder.docker/hello-world"
