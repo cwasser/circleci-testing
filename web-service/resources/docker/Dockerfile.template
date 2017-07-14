@@ -120,7 +120,7 @@ info 'Installing dynamic gRPC {{php_grpc_version}} PHP extension' && \
 cd /usr/local/src && \
 git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
 cd grpc && \
-if [ ${APP_ENV} = dev ]; then make -s static_c; else make -sj `nproc` static_c; fi && \
+make -sj `nproc` static_c && \
 make install-headers_c install-static_c && \
 ldconfig && \
 cd src/php/ext/grpc && \
