@@ -129,7 +129,7 @@ ln -sf /dev/stdout /var/log/php/access.log && \
 ln -sf /dev/stderr /var/log/php/error.log && \
 #
 info 'Cleaning system' && \
-apt-get purge -qqy --auto-remove ${BUILD_DEPS} && \
+apt-get purge -qqy --auto-remove {{build_dependencies}} && \
 apt-get clean -qqy && \
 rm -rf \
 /etc/dpkg/dpkg.conf.d/ \
