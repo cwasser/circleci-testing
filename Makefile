@@ -11,6 +11,14 @@ cleaner: ## Clean all artifacts and dependencies
 	$(MAKE) -C web-testing cleaner
 .PHONY: cleaner
 
+docker-clean: ## Cleanup unused docker resources
+	docker system prune --force
+.PHONY: docker-clean
+
+docker-cleaner: ## Cleanup all docker resources
+	docker system prune --all --force
+.PHONY: docker-cleaner
+
 dev-server: ## Start development server
 	$(MAKE) run ENV=dev
 .PHONY: dev-server

@@ -41,18 +41,6 @@ define docker_build =
 		.
 endef
 
-# Extra leading slashes are for Windows compatibility!
-# Cache is stored in root for sharing with other PHP based containers!
-define composer =
-	docker run \
-		-it --rm --name composer \
-		-v $(__DIR__)://usr/local/src \
-		-v //var/cache/composer://root/.composer \
-		--entrypoint composer \
-		fleshgrinder/$(1) \
-		$(2)
-endef
-
 help: ## Display this help
 	@printf "$(FG_YELLOW)Usage:$(RESET)\n    make [flags] [target] [options]\n\n"
 	@printf "$(FG_YELLOW)Flags:$(RESET)\n    See $(FG_GRAY)make --help$(RESET)\n\n"
@@ -64,11 +52,3 @@ help: ## Display this help
 	@printf "    $(FG_GREEN)%-$(HELP_PADDING)s$(RESET) Set mode to 1 for verbose output $(FG_YELLOW)[default: 0]$(RESET)\n" "VERBOSE=<mode>"
 	@printf '\n'
 .PHONY: help
-
-docker-clean: ## Cleanup unused docker resources
-	docker system prune --force
-.PHONY: docker-clean
-
-docker-cleaner: ## Cleanup all docker resources
-	docker system prune --all --force
-.PHONY: docker-cleaner

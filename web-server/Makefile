@@ -2,11 +2,7 @@ __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include ../resources/make/bootstrap.mk
 
 dockerfiles: ## Generate the docker files
-	if command -v php >/dev/null;\
-		then php bin/gen-dockerfiles;\
-		else docker run -it --rm --name gen-dockerfiles \
-			-v $(__DIR__)://src -w //src php:cli php bin/gen-dockerfiles;\
-	fi
+	docker run -it --rm --name gen-dockerfiles -v $(__DIR__)..://src -w //src/web-server php:cli php bin/gen-dockerfiles
 .PHONY: dockerfiles
 
 prod-image: ## Build the production image

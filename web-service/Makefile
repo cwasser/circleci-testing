@@ -1,8 +1,17 @@
 __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include ../resources/make/bootstrap.mk
 
-COMPOSER_EX = $(call composer,web-service-test,$(1))
-COMPOSER    = $(call COMPOSER_EX,$@)
+composer = $(call composer,$@)
+define composer_ex =
+	docker run \
+		-it --rm --name composer \
+		-v $(__DIR__)..://src \
+		-v $(__DIR__)../target/cache/composer://root/.composer \
+		--entrypoint composer \
+		-w //src/web-service \
+		fleshgrinder/web-service-test \
+		$(1)
+endef
 
 clean: ## Cleanup artifacts
 	rm -fr target/
@@ -13,30 +22,26 @@ cleaner: clean ## Cleanup artifacts and dependencies
 .PHONY: cleaner
 
 clear-cache: ## Clear caches
-	$(call COMPOSER)
+	$(call composer)
 .PHONY: clear-cache
 
 install: composer.json ## Install dependencies
 composer.json: composer.lock
 composer.lock: vendor/autoload.php
 vendor/autoload.php:
-	$(call COMPOSER_EX,install --no-suggest)
+	$(call composer_ex,install --no-suggest)
 	touch $@
 
 test: install ## Run all tests
-	$(call COMPOSER)
+	$(call composer)
 .PHONY: test
 
 update: composer.json ## Update dependencies
-	$(call COMPOSER)
+	$(call composer)
 .PHONY: update
 
 dockerfiles: ## Generate the docker files
-	if command -v php >/dev/null
-		then php bin/gen-dockerfiles
-		else docker run -it --rm --name gen-dockerfiles \
-			-v $(__DIR__)://src -w //src php:cli php bin/gen-dockerfiles
-	fi
+	docker run -it --rm --name gen-dockerfiles -v $(__DIR__)..://src -w //src/web-service php:cli php bin/gen-dockerfiles
 
 prod-image: ## Build the production image
 	$(MAKE) image ENV=prod
