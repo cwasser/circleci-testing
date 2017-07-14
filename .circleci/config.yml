@@ -20,6 +20,12 @@ workflows:
       - Build web-service image:
           requires: [Run web-service unit tests]
 
+#      - run integration tests
+#      - run contract tests
+#      - run end-to-end tests
+
+#      - deploy
+
 jobs:
   Checkout:
     docker: [{image: fleshgrinder/alpine-git-tar}]

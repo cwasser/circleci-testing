@@ -48,31 +48,31 @@ gpg --batch --verify php.tar.xz.asc php.tar.xz && \
 tar -xJf php.tar.xz && \
 mv php-{{php_version}} php && \
 #
-info 'Installing PHP Protobuf extension {{php_protobuf_version}}' && \
-cd /usr/local/src && \
-git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
-cd protobuf && \
-./autogen.sh && \
-./configure --disable-shared && \
-make -sj `nproc` && \
+#info 'Installing PHP Protobuf extension {{php_protobuf_version}}' && \
+#cd /usr/local/src && \
+#git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
+#cd protobuf && \
+#./autogen.sh && \
+#./configure --disable-shared && \
+#make -sj `nproc` && \
 #make check && \
-make install && \
-ldconfig && \
-cd php/ext/google/protobuf && \
+#make install && \
+#ldconfig && \
+#cd php/ext/google/protobuf && \
 #
-info 'Installing PHP gRPC extension {{php_grpc_version}}' && \
-cd /usr/local/src && \
-git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
-cd grpc && \
-export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -pipe -Wformat -Wformat-security' && \
-export CXXFLAGS="${CFLAGS}" && \
-export CPPFLAGS="${CFLAGS}" && \
-export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
-make -sj `nproc` static && \
-unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
-make strip-static && \
-make install-static && \
-ldconfig && \
+#info 'Installing PHP gRPC extension {{php_grpc_version}}' && \
+#cd /usr/local/src && \
+#git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
+#cd grpc && \
+#export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -pipe -Wformat -Wformat-security' && \
+#export CXXFLAGS="${CFLAGS}" && \
+#export CPPFLAGS="${CFLAGS}" && \
+#export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
+#make -sj `nproc` static && \
+#unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
+#make strip-static && \
+#make install-static && \
+#ldconfig && \
 #
 info 'Configuring PHP {{php_version}}' && \
 cd /usr/local/src/php && \
@@ -102,12 +102,12 @@ rm configure && \
 #
 --disable-all \
 #
---enable-grpc \
+#--enable-grpc \
 --enable-json \
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
---enable-protobuf \
+#--enable-protobuf \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \

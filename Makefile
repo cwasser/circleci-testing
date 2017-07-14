@@ -30,7 +30,7 @@ server: ## Start production server
 run:
 	docker-compose --file config/docker/compose-$(ENV).yml pull --ignore-pull-failures --parallel
 	[ -f web-server/Dockerfile.web-server-$(ENV) ] || $(MAKE) -C web-server dockerfiles
-#	[ -f web-service/Dockerfile.web-service-$(ENV) ] || $(MAKE) -C web-service dockerfiles
+	[ -f web-service/Dockerfile.web-service-$(ENV) ] || $(MAKE) -C web-service dockerfiles
 	docker-compose --file config/docker/compose-$(ENV).yml up --abort-on-container-exit --no-recreate --remove-orphans
 .PHONY: run
 

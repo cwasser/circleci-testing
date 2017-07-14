@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.web-server-dev
     domainname: api.fleshgrinder.docker
     hostname: web-server
-    image: fleshgrinder/web-server:latest
+    image: fleshgrinder/web-server-dev:latest
     links:
       - web-service
     ports:
@@ -20,13 +20,13 @@ services:
   web-service:
     build:
       context: ../../web-service
-      dockerfile: Dockerfile.web-service
+      dockerfile: Dockerfile.web-service-dev
     domainname: api.fleshgrinder.docker
     environment:
       - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
       - PHP_ZEND_ASSERTIONS=1
     hostname: web-service
-    image: fleshgrinder/web-service-test:latest
+    image: fleshgrinder/web-service-dev:latest
     volumes:
       - '../../web-service/config/php:/usr/local/etc/php:ro'
       - '../../web-service/src/main/php:/srv/www/web-service/src/main/php:ro'
