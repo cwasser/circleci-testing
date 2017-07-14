@@ -2,6 +2,7 @@ __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include resources/make/bootstrap.mk
 
 clean: ## Clean all artifacts
+	$(MAKE) -C web-server clean
 	$(MAKE) -C web-service clean
 	$(MAKE) -C web-testing clean
 .PHONY: clean
@@ -19,11 +20,12 @@ docker-cleaner: ## Cleanup all docker resources
 	docker system prune --all --force
 .PHONY: docker-cleaner
 
-dev-server: ## Start development server
-	$(MAKE) run ENV=dev
+dev-server: ## Start development server (currently broken)
+	$(error dev environment is currently broken [due to gRPC])
+#	$(MAKE) run ENV=dev
 .PHONY: dev-server
 
-server: ## Start production server
+prod-server: ## Start production server
 	$(MAKE) run ENV=prod
 .PHONY: server
 

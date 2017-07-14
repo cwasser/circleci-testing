@@ -17,16 +17,22 @@ STOPSIGNAL SIGQUIT
 WORKDIR /srv/www
 ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8" \
 	PHP_OPCACHE_VALIDATE_TIMESTAMPS={{php_opcache_validate_timestamps}} \
-	PHP_ZEND_ASSERTIONS={{php_zend_assertions}}
+	PHP_ZEND_ASSERTIONS={{php_zend_assertions}} \
+	APP_ENV={{env}}
 
 COPY resources/docker/vendor-keys.pub /tmp/vendor-keys.pub
 
+# see: http://pubs.opengroup.org/onlinepubs/009696799/utilities/set.html
 RUN set -exu && \
+#
+# Helper function to print yellow text to the terminal.
 info() { printf '\n\033[33m%s\033[0m\n\n' "$1"; } && \
+#
 #
 info 'Creating php system user' && \
 adduser --system --group --disabled-password --disabled-login --no-create-home php && \
 #
+# https://askubuntu.com/questions/541055/installing-packages-without-docs
 info 'Installing dependencies' && \
 mkdir -p /etc/dpkg/dpkg.conf.d && \
 touch /etc/dpkg/dpkg.conf.d/01_nodoc && \
@@ -36,6 +42,9 @@ done && \
 apt-get update -qq && \
 apt-get install -qqy --auto-remove --no-install-recommends --no-install-suggests {{build_dependencies}} {{dependencies}} && \
 #
+# These are required to verify the signature of the downloaded PHP archive for
+# its authenticity, otherwise we do not know if someone tampered with the
+# sources that we are going to compile.
 info 'Importing vendor GPG keys' && \
 gpg --import /tmp/vendor-keys.pub && \
 #
@@ -47,37 +56,9 @@ curl -sLSo php.tar.xz.asc https://secure.php.net/get/php-{{php_version}}.tar.xz.
 gpg --batch --verify php.tar.xz.asc php.tar.xz && \
 tar -xJf php.tar.xz && \
 mv php-{{php_version}} php && \
+cd php && \
 #
-#info 'Installing PHP Protobuf extension {{php_protobuf_version}}' && \
-#cd /usr/local/src && \
-#git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
-#cd protobuf && \
-#./autogen.sh && \
-#./configure --disable-shared && \
-#make -sj `nproc` && \
-#make check && \
-#make install && \
-#ldconfig && \
-#cd php/ext/google/protobuf && \
-#
-#info 'Installing PHP gRPC extension {{php_grpc_version}}' && \
-#cd /usr/local/src && \
-#git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
-#cd grpc && \
-#export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -pipe -Wformat -Wformat-security' && \
-#export CXXFLAGS="${CFLAGS}" && \
-#export CPPFLAGS="${CFLAGS}" && \
-#export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
-#make -sj `nproc` static && \
-#unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
-#make strip-static && \
-#make install-static && \
-#ldconfig && \
-#
-info 'Configuring PHP {{php_version}}' && \
-cd /usr/local/src/php && \
-rm configure && \
-./buildconf --force && \
+info 'Configuring PHP' && \
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 --with-config-file-path=/usr/local/etc/php \
@@ -90,29 +71,20 @@ rm configure && \
 {{php_configure_phpdbg}} \
 --disable-rpath \
 --disable-short-tags \
---enable-fpm \
 --enable-inline-optimization \
 --enable-ipv6 \
 --enable-libgcc \
 --enable-re2c-cgoto \
 --enable-static \
 #
+--enable-fpm \
 --with-fpm-user=php \
 --with-fpm-group=php \
 #
 --disable-all \
+{{php_extensions}} && \
 #
-#--enable-grpc \
---enable-json \
---enable-mbstring \
---enable-mysqlnd \
---enable-opcache \
-#--enable-protobuf \
---with-mysqli=mysqlnd \
---with-pcre-jit \
---with-pcre-regex \
-&& \
-info 'Compiling PHP {{php_version}}' && \
+info 'Compiling PHP' && \
 export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security' && \
 export CXXFLAGS="${CFLAGS}" && \
 export CPPFLAGS="${CFLAGS}" && \
@@ -120,13 +92,72 @@ export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' &&
 make -sj `nproc` && \
 unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
 #
-info 'Installing PHP {{php_version}}' && \
+info 'Installing PHP' && \
 make install && \
 strip --strip-all /usr/local/sbin/php-fpm && \
 #
 mkdir -p /var/log/php && \
 ln -sf /dev/stdout /var/log/php/access.log && \
 ln -sf /dev/stderr /var/log/php/error.log && \
+#
+info 'Installing dynamic Protobuf {{php_protobuf_version}} PHP extension' && \
+cd /usr/local/src && \
+git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
+cd protobuf && \
+./autogen.sh && \
+./configure --disable-shared && \
+make -sj `nproc` && \
+make install && \
+ldconfig && \
+cd php/ext/google/protobuf && \
+phpize && \
+./configure && \
+make -sj `nproc` && \
+make install && \
+strip --strip-all $(php-config --extension-dir)/protobuf.so && \
+#
+info 'Installing dynamic gRPC {{php_grpc_version}} PHP extension' && \
+cd /usr/local/src && \
+git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
+cd grpc && \
+if [ ${APP_ENV} = dev ]; then make -s static_c; else make -sj `nproc` static_c; fi && \
+make install-headers_c install-static_c && \
+ldconfig && \
+cd src/php/ext/grpc && \
+phpize && \
+./configure && \
+make -sj `nproc`\
+make install && \
+strip --strip-all $(php-config --extension-dir)/grpc.so && \
+#
+if [ ${APP_ENV} = dev ]; then \
+	info 'Installing Xdebug {{xdebug_version}} PHP extension' && \
+	cd /usr/local/src && \
+	curl -sLSo xdebug.tar.gz https://xdebug.org/files/xdebug-{{xdebug_version}}.tgz && \
+	(echo '{{xdebug_digest}} *xdebug.tar.gz' | sha256sum -c -) && \
+	tar -xJf xdebug.tar.gz && \
+	cd xdebug-{{xdebug_version}} && \
+	phpize && \
+	./configure --enable-xdebug && \
+	make -sj `nproc` && \
+	make install && \
+	strip --strip-all $(php-config --extension-dir)/xdebug.so && \
+#
+# TODO how and when to we load Xdebug? We probably have to create another
+# TODO docker-compose configuration where we always load it!?! We also need a
+# TODO documentation where we explain how debugging works with PhpStorm, how
+# TODO to set it up, and, and, and, ...
+#
+	info 'Installing composer' && \
+	cd /usr/local/src && \
+	curl -sLSo composer-setup https://getcomposer.org/installer && \
+	(echo '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410 *composer-setup' | sha384sum -c -) && \
+	php composer-setup --install-dir=/usr/local/bin --filename=composer;\
+fi && \
+#
+# TODO the image is still too big, there are for sure places where things get
+# TODO installed (most probably from Protobuf and gRPC) that we actually do not
+# TODO require. FIND AND PURGE 'EM ALL!
 #
 info 'Cleaning system' && \
 apt-get purge -qqy --auto-remove {{build_dependencies}} && \
@@ -150,5 +181,7 @@ rm -rf \
 /var/lib/apt/lists/* \
 /var/tmp/* \
 && \
+([ ! -f /usr/local/bin/composer ] || composer -v) && \
+php-fpm -m && \
 php-fpm -v && \
 printf '\n\033[32mFinished!\033[0m\n\n'

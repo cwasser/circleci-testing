@@ -14,7 +14,7 @@ define composer_ex =
 endef
 
 clean: ## Cleanup artifacts
-	rm -fr target/
+	rm -fr Dockerfile.web-service-*
 .PHONY: clean
 
 cleaner: clean ## Cleanup artifacts and dependencies

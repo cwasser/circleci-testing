@@ -14,20 +14,35 @@ function gen_dockerfiles(array $config = []): void {
 	}
 
 	chdir($cwd);
-	$ini = parse_ini_file('config/docker/config.ini');
+	($ini = parse_ini_file('config/docker/config.ini', true)) || exit(1);
+	($tpl = file_get_contents('resources/docker/Dockerfile.template')) || exit(1);
 
-	$gen = function (string $env) use ($ini, $config, $target) {
+	$gen = function (string $env) use ($ini, $config, $target, $tpl) {
+		if (isset($ini[$env])) {
+			foreach ((array) $ini[$env] as $k => $v) {
+				if (is_array($v)) {
+					$ini[$k] = array_merge($ini[$k], $v);
+				}
+				else {
+					$ini[$k] = $v;
+				}
+			}
+			unset($ini[$env]);
+		}
+
 		foreach ($config as $k => $v) {
 			$ini[$k] = $v[$env];
 		}
 
+		$ini['env'] = $env;
+
 		file_put_contents("Dockerfile.{$target}-{$env}", preg_replace_callback(
-			'/\{\{([a-z\d_]+)\}\}/',
+			/** @lang RegExp */ '/\{\{([a-z\d_]+)\}\}/',
 			function ($matches) use ($ini) {
-				return $ini[$matches[1]];
+				return is_array($ini[$matches[1]]) ? implode(' ', $ini[$matches[1]]) : $ini[$matches[1]];
 			},
-			file_get_contents('resources/docker/Dockerfile.template')
-		));
+			$tpl
+		)) || exit(1);
 	};
 
 	$gen('dev');

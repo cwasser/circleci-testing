@@ -3,14 +3,4 @@
 
 require_once __DIR__ . '/../../resources/docker/gen-dockerfiles.inc';
 
-gen_dockerfiles([
-	'entrypoint' => [
-		'dev'  => '["/usr/local/sbin/nginx", "-g", "error_log /var/log/nginx/error.log debug;"]',
-		'prod' => '["/usr/local/sbin/nginx"]',
-	],
-
-	'debug' => [
-		'dev'  => '--with-debug',
-		'prod' => '',
-	],
-]);
+gen_dockerfiles();
