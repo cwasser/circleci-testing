@@ -77,7 +77,7 @@ cd nginx && \
 --http-client-body-temp-path=/var/cache/nginx/client-bodies \
 --http-fastcgi-temp-path=/var/cache/nginx/fastcgi \
 #
-{{with_debug}} \
+{{debug}} \
 --with-http_ssl_module \
 --with-http_v2_module \
 --with-openssl-opt='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -pipe enable-ec_nistp_64_gcc_128 no-comp -no-deprecated no-dso no-dtls no-dynamic-engine no-engine no-err no-heartbeats no-idea no-md2 no-md4 no-mdc2 no-rc2 no-rc4 no-rc5 no-static-engine' \

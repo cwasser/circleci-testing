@@ -18,76 +18,59 @@ ENV DEBIAN_FRONTEND="teletype" LANG="C.UTF-8" \
 
 COPY resources/docker/vendor-keys.pub /usr/local/src/vendor-keys.pub
 
-RUN set -exu;\
+RUN set -exu && \
 #
 # ------------------------------------------------------------------------------ Config
 #
 # PHP version to compile (`major.minor.patch`)
-readonly PHP_VERSION='7.1.7';\
+readonly PHP_VERSION='7.1.7' && \
 #
 # SHA256 digest of the PHP `.tar.xz` archive
-readonly PHP_DIGEST='0d42089729be7b2bb0308cbe189c2782f9cb4b07078c8a235495be5874fff729';\
+readonly PHP_DIGEST='0d42089729be7b2bb0308cbe189c2782f9cb4b07078c8a235495be5874fff729' && \
 #
 # https://github.com/grpc/grpc/tags
-readonly PHP_GRPC_VERSION='v1.4.1';\
+readonly PHP_GRPC_VERSION='v1.4.1' && \
 #
 # https://github.com/google/protobuf/tags
-readonly PHP_PROTOBUF_VERSION='v3.3.2';\
+readonly PHP_PROTOBUF_VERSION='v3.3.2' && \
 #
 # Dependencies required for building (not part of the final image)
-readonly BUILD_DEPS='autoconf automake build-essential ca-certificates curl file git gnupg libtool re2c';\
+readonly BUILD_DEPS='autoconf automake build-essential ca-certificates curl file git gnupg libtool re2c' && \
 #
 # ------------------------------------------------------------------------------
 #
-info() { printf '\n\033[33m%s\033[0m\n\n' "$1"; };\
-apt_update() { apt-get update -qq; };\
-apt_install() { apt-get install -qqy --auto-remove --no-install-recommends --no-install-suggests $*; };\
+info() { printf '\n\033[33m%s\033[0m\n\n' "$1"; } && \
+apt_update() { apt-get update -qq; } && \
+apt_install() { apt-get install -qqy --auto-remove --no-install-recommends --no-install-suggests $*; } && \
 #
-mkdir -p /etc/dpkg/dpkg.conf.d;\
-touch /etc/dpkg/dpkg.conf.d/01_nodoc;\
+mkdir -p /etc/dpkg/dpkg.conf.d && \
+touch /etc/dpkg/dpkg.conf.d/01_nodoc && \
 for e in 'doc-base doc groff info linda lintian man';\
 	do echo "path-exclude /usr/share/${e}/*" >> /etc/dpkg/dpkg.conf.d/01_nodoc;\
-done;\
+done && \
 #
-cd /usr/local/src;\
+cd /usr/local/src && \
 #
-info 'installing build dependencies';\
-apt_update;\
-apt_install ${BUILD_DEPS};\
+info 'installing build dependencies' && \
+apt_update && \
+apt_install ${BUILD_DEPS} && \
 #
-info 'importing vendor GPG keys';\
-gpg --import vendor-keys.pub;\
+info 'importing vendor GPG keys' && \
+gpg --import vendor-keys.pub && \
 #
-info 'downloading PHP sources and verifying their authenticity';\
-curl -sLSo php.tar.xz https://secure.php.net/get/php-${PHP_VERSION}.tar.xz/from/this/mirror;\
-echo "${PHP_DIGEST} *php.tar.xz" | sha256sum -c -;\
-curl -sLSo php.tar.xz.asc https://secure.php.net/get/php-${PHP_VERSION}.tar.xz.asc/from/this/mirror;\
-gpg --batch --verify php.tar.xz.asc php.tar.xz;\
-tar -xJf php.tar.xz;\
-mv php-${PHP_VERSION} php;\
+info 'downloading PHP sources and verifying their authenticity' && \
+curl -sLSo php.tar.xz https://secure.php.net/get/php-${PHP_VERSION}.tar.xz/from/this/mirror && \
+echo "${PHP_DIGEST} *php.tar.xz" | sha256sum -c - && \
+curl -sLSo php.tar.xz.asc https://secure.php.net/get/php-${PHP_VERSION}.tar.xz.asc/from/this/mirror && \
+gpg --batch --verify php.tar.xz.asc php.tar.xz && \
+tar -xJf php.tar.xz && \
+mv php-${PHP_VERSION} php && \
 #
-info "downloading PHP Protobuf extension ${PHP_PROTOBUF_VERSION}";\
-git clone -qb ${PHP_PROTOBUF_VERSION} --depth 1 https://github.com/google/protobuf.git;\
-mv protobuf/php/ext/google/protobuf php/ext/protobuf;\
-#
-info "downloading PHP gRPC extension ${PHP_GRPC_VERSION}";\
-git clone -qb ${PHP_GRPC_VERSION} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git;\
-cd grpc;\
-export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -pipe -Wformat -Wformat-security';\
-export CXXFLAGS="${CFLAGS}";\
-export CPPFLAGS="${CFLAGS}";\
-export LDFLAGS='-Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
-make -s;\
-make install;\
-ldconfig;\
-cd ..;\
-mv grpc/src/php/ext/grpc php/ext/grpc;\
-#
-info "building and installing php-fpm ${PHP_VERSION}";\
-cd php;\
-adduser --system --group --disabled-password --disabled-login --no-create-home php;\
-rm configure;\
-./buildconf --force;\
+info "building and installing php-fpm ${PHP_VERSION}" && \
+cd php && \
+adduser --system --group --disabled-password --disabled-login --no-create-home php && \
+rm configure && \
+./buildconf --force && \
 ./configure \
 --build="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 --with-config-file-path=/usr/local/etc/php \
@@ -112,32 +95,65 @@ rm configure;\
 #
 --disable-all \
 #
---enable-grpc \
+#--enable-grpc \
 --enable-json \
 --enable-mbstring \
 --enable-mysqlnd \
 --enable-opcache \
---enable-protobuf \
+#--enable-protobuf \
 --with-mysqli=mysqlnd \
 --with-pcre-jit \
 --with-pcre-regex \
-;\
+ && \
 #
-export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security';\
-export CXXFLAGS="${CFLAGS}";\
-export CPPFLAGS="${CFLAGS}";\
-export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now';\
-make -sj`nproc`;\
-make install;\
-strip --strip-all /usr/local/sbin/php-fpm;\
+export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpic -fpie -O2 -pipe -Wformat -Wformat-security' && \
+export CXXFLAGS="${CFLAGS}" && \
+export CPPFLAGS="${CFLAGS}" && \
+export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
+make -sj`nproc` && \
+unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS && \
+make install && \
+strip --strip-all /usr/local/sbin/php-fpm && \
 #
-mkdir -p /var/log/php;\
-ln -sf /dev/stdout /var/log/php/access.log;\
-ln -sf /dev/stderr /var/log/php/error.log;\
+mkdir -p /var/log/php && \
+ln -sf /dev/stdout /var/log/php/access.log && \
+ln -sf /dev/stderr /var/log/php/error.log && \
 #
-info 'cleanup';\
-apt-get purge -qqy --auto-remove ${BUILD_DEPS};\
-apt-get clean -qqy;\
+info "downloading PHP gRPC extension ${PHP_GRPC_VERSION}" && \
+cd /usr/local/src && \
+git clone -qb ${PHP_GRPC_VERSION} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
+cd grpc && \
+#export CFLAGS='-D_FORTIFY_SOURCE=2 -fstack-protector-strong -fpie -O2 -pipe -Wformat -Wformat-security' && \
+#export CXXFLAGS="${CFLAGS}" && \
+#export CPPFLAGS="${CFLAGS}" && \
+#export LDFLAGS='-pie -s -Wl,-O1 -Wl,--hash-style,gnu -Wl,-z,relro -Wl,-z,now' && \
+make -sj `nproc` && \
+make install && \
+ldconfig && \
+#cd .. && \
+#mv grpc/src/php/ext/grpc php/ext/grpc && \
+cd src/php/ext/grpc && \
+phpize && \
+./configure && \
+make -sj `nproc` && \
+make install && \
+ls -l /usr/local/lib/php/extensions/no-debug-non-zts-20160303 && \
+#
+info "downloading PHP Protobuf extension ${PHP_PROTOBUF_VERSION}" && \
+cd /usr/local/src && \
+#git clone -qb patched --depth 1 https://github.com/Fleshgrinder/protobuf.git && \
+git clone -qb ${PHP_PROTOBUF_VERSION} --depth 1 https://github.com/google/protobuf.git && \
+#mv protobuf/php/ext/google/protobuf php/ext/protobuf && \
+cd protobuf/php/ext/google/protobuf && \
+phpize && \
+./configure && \
+make -sj `nproc` && \
+make install && \
+ls -l /usr/local/lib/php/extensions/no-debug-non-zts-20160303 && \
+#
+info 'cleanup' && \
+apt-get purge -qqy --auto-remove ${BUILD_DEPS} && \
+apt-get clean -qqy && \
 rm -rf \
 /etc/dpkg/dpkg.conf.d/ \
 /root/.gnupg/ \
