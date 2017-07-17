@@ -21,8 +21,7 @@ docker-cleaner: ## Cleanup all docker resources
 .PHONY: docker-cleaner
 
 dev-server: ## Start development server (currently broken)
-	$(error dev environment is currently broken [due to gRPC])
-#	$(MAKE) run ENV=dev
+	$(MAKE) run ENV=dev
 .PHONY: dev-server
 
 prod-server: ## Start production server
