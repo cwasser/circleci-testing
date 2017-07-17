@@ -16,12 +16,24 @@ class FeatureContext implements Context  {
         }
     }
 
-    /** @Given API is running */
-    public function apiIsRunning() {
+    /** @Given API is reachable */
+    public function apiIsReachable() {
+        $timeout = 5.00;
+        $errno = null;
+        $message = 'API is not reachable';
         $this->server = new Process('make dev-server', __DIR__ . '/../../../');
         $this->server->start();
+        $start_time = microtime(true);
 
-        assert($this->server->isRunning());
+        while ((microtime(true) - $start_time) * 10000000 < $timeout) {
+           if (fsockopen('api.fleshgrinder.docker/hello-world',80, $errno )) {
+               assert($this->server->isRunning());
+           }
+           else {
+               usleep(200000);
+           }
+        }
+        return $message;
     }
 
     /** @Then I should get a :body response when I call :url */
