@@ -20,7 +20,7 @@ docker-cleaner: ## Cleanup all docker resources
 	docker system prune --all --force
 .PHONY: docker-cleaner
 
-dev-server: ## Start development server (currently broken)
+dev-server: ## Start development server
 	$(MAKE) run ENV=dev
 .PHONY: dev-server
 

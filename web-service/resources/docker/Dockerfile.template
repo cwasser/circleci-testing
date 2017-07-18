@@ -99,10 +99,27 @@ strip --strip-all /usr/local/sbin/php-fpm && \
 mkdir -p /var/log/php && \
 ln -sf /dev/stdout /var/log/php/access.log && \
 ln -sf /dev/stderr /var/log/php/error.log && \
+##
+info 'Installing gRPC C core library v{{php_grpc_version}}' && \
+cd /usr/local/src && \
+git clone -qb {{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
+cd grpc && \
+export CFLAGS="-Wno-error" && \
+make -sj `nproc` && \
+make install && \
+##
+info 'Installing dynamic gRPC {{php_grpc_version}} PHP extension' && \
+cd /usr/local/src/grpc/src/php/ext/grpc && \
+phpize && \
+./configure && \
+make -sj `nproc` && \
+unset CFLAGS && \
+cp modules/grpc.so $(php-config --extension-dir) && \
+strip --strip-all $(php-config --extension-dir)/grpc.so && \
 #
 info 'Installing dynamic Protobuf {{php_protobuf_version}} PHP extension' && \
 cd /usr/local/src && \
-git clone -qb v{{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
+git clone -qb {{php_protobuf_version}} --depth 1 https://github.com/google/protobuf.git && \
 cd protobuf && \
 ./autogen.sh && \
 ./configure --disable-shared && \
@@ -115,20 +132,6 @@ phpize && \
 make -sj `nproc` && \
 make install && \
 strip --strip-all $(php-config --extension-dir)/protobuf.so && \
-#
-#info 'Installing dynamic gRPC {{php_grpc_version}} PHP extension' && \
-#cd /usr/local/src && \
-#git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
-#cd grpc && \
-#make -sj `nproc` static_c && \
-#make install-headers_c install-static_c && \
-#ldconfig && \
-#cd src/php/ext/grpc && \
-#phpize && \
-#./configure && \
-#make -sj `nproc`\
-#make install && \
-#strip --strip-all $(php-config --extension-dir)/grpc.so && \
 #
 if [ ${APP_ENV} = dev ]; then \
 	info 'Installing Xdebug {{xdebug_version}} PHP extension' && \
