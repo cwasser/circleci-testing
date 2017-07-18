@@ -116,26 +116,26 @@ make -sj `nproc` && \
 make install && \
 strip --strip-all $(php-config --extension-dir)/protobuf.so && \
 #
-info 'Installing dynamic gRPC {{php_grpc_version}} PHP extension' && \
-cd /usr/local/src && \
-git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
-cd grpc && \
-make -sj `nproc` static_c && \
-make install-headers_c install-static_c && \
-ldconfig && \
-cd src/php/ext/grpc && \
-phpize && \
-./configure && \
-make -sj `nproc`\
-make install && \
-strip --strip-all $(php-config --extension-dir)/grpc.so && \
+#info 'Installing dynamic gRPC {{php_grpc_version}} PHP extension' && \
+#cd /usr/local/src && \
+#git clone -qb v{{php_grpc_version}} --jobs 8 --recurse-submodules https://github.com/grpc/grpc.git && \
+#cd grpc && \
+#make -sj `nproc` static_c && \
+#make install-headers_c install-static_c && \
+#ldconfig && \
+#cd src/php/ext/grpc && \
+#phpize && \
+#./configure && \
+#make -sj `nproc`\
+#make install && \
+#strip --strip-all $(php-config --extension-dir)/grpc.so && \
 #
 if [ ${APP_ENV} = dev ]; then \
 	info 'Installing Xdebug {{xdebug_version}} PHP extension' && \
 	cd /usr/local/src && \
 	curl -sLSo xdebug.tar.gz https://xdebug.org/files/xdebug-{{xdebug_version}}.tgz && \
 	(echo '{{xdebug_digest}} *xdebug.tar.gz' | sha256sum -c -) && \
-	tar -xJf xdebug.tar.gz && \
+	tar -xvzf xdebug.tar.gz && \
 	cd xdebug-{{xdebug_version}} && \
 	phpize && \
 	./configure --enable-xdebug && \
