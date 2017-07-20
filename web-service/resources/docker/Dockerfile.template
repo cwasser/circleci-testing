@@ -155,16 +155,7 @@ if [ ${APP_ENV} = dev ]; then \
 	cd /usr/local/src && \
 	curl -sLSo composer-setup https://getcomposer.org/installer && \
 	(echo '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410 *composer-setup' | sha384sum -c -) && \
-	php composer-setup --install-dir=/usr/local/bin --filename=composer && \
-#
-	info 'Installing docker client {{docker_version}}' && \
-	cd /tmp && \
-	curl -sLSo docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-{{docker_version}}.tgz && \
-	tar -xvzf docker.tgz && \
-	cp docker/docker /usr/local/bin && \
-#
-	curl -L https://github.com/docker/compose/releases/download/{{docker_compose_version}}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose && \
-	chmod +x /usr/local/bin/docker-compose; \
+	php composer-setup --install-dir=/usr/local/bin --filename=composer; \
 fi && \
 #
 # TODO the image is still too big, there are for sure places where things get
