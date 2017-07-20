@@ -21,7 +21,6 @@ services:
     build:
       context: ../../web-service
       dockerfile: Dockerfile.web-service-dev
-    domainname: api.fleshgrinder.docker
     environment:
       - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
       - PHP_ZEND_ASSERTIONS=1
@@ -31,3 +30,4 @@ services:
       - '../../web-service/config/php:/usr/local/etc/php:ro'
       - '../../web-service/src/main/php:/srv/www/web-service/src/main/php:ro'
       - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
+

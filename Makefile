@@ -1,6 +1,8 @@
 __DIR__ := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include resources/make/bootstrap.mk
 
+ENV ?= dev
+
 clean: ## Clean all artifacts
 	$(MAKE) -C web-server clean
 	$(MAKE) -C web-service clean
@@ -32,10 +34,12 @@ run:
 	docker-compose --file config/docker/compose-$(ENV).yml pull --ignore-pull-failures --parallel
 	[ -f web-server/Dockerfile.web-server-$(ENV) ] || $(MAKE) -C web-server dockerfiles
 	[ -f web-service/Dockerfile.web-service-$(ENV) ] || $(MAKE) -C web-service dockerfiles
-	docker-compose --file config/docker/compose-$(ENV).yml up --abort-on-container-exit --no-recreate --remove-orphans
+	docker-compose --file config/docker/compose-$(ENV).yml up --abort-on-container-exit --remove-orphans
 .PHONY: run
 
 test: ## Execute all tests
+	[ ! -z `docker images -q fleshgrinder/web-server-$(ENV):latest` ] || $(MAKE) -C web-server image ENV=$(ENV)
+	[ ! -z `docker images -q fleshgrinder/web-service-$(ENV):latest` ] || $(MAKE) -C web-service image ENV=$(ENV)
 	$(MAKE) -C web-service test
 	$(MAKE) -C web-testing test
 .PHONY: test

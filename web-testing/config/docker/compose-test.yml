@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+  web-testing:
+    image: fleshgrinder/web-service-dev:latest
+    hostname: web-testing
+    links:
+      - 'web-server:api.fleshgrinder.docker'
+    depends_on:
+      - "web-server"
+      - "web-service"
+    entrypoint: [ 'composer', 'test' ]
+    working_dir: '/srv/www/web-testing'
+    volumes:
+      - '../../web-testing/:/srv/www/web-testing:ro'

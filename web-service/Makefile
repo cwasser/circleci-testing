@@ -9,7 +9,7 @@ define composer_ex =
 		-v $(__DIR__)../target/cache/composer://root/.composer \
 		--entrypoint composer \
 		-w //src/web-service \
-		fleshgrinder/web-service-test \
+		fleshgrinder/web-service-dev:latest \
 		$(1)
 endef
 

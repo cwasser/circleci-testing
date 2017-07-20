@@ -9,7 +9,7 @@ define composer_ex =
 		-v $(__DIR__)../target/cache/composer://root/.composer \
 		--entrypoint composer \
 		-w //src/web-testing \
-		fleshgrinder/web-service-test \
+		fleshgrinder/web-service-dev:latest \
 		$(1)
 endef
 
@@ -33,7 +33,7 @@ vendor/autoload.php:
 	touch $@
 
 test: install ## Run all tests
-	$(call composer)
+	docker-compose -f ../config/docker/compose-dev.yml -f config/docker/compose-test.yml up --abort-on-container-exit --remove-orphans
 .PHONY: test
 
 update: composer.json ## Update dependencies
