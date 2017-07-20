@@ -25,15 +25,9 @@ class FeatureContext implements Context  {
 
     /** @Then I should get a :expectedBody response when I call :url */
     public function iShouldGetAResponseWhenICall(string $expectedBody, string $url): void {
-        $context = stream_context_create([
-            'http' => [
-                'method' => "GET",
-                'header' => "Host: api.fleshgrinder.docker\r\n"
-            ]
-        ]);
-        $responseBody = file_get_contents($url, false, $context);
+        $responseBody = file_get_contents($url);
         if ($responseBody !== $expectedBody) {
-            throw new \Exception("kaputt");
+            throw new \Exception("Wrong response received");
         }
     }
 }

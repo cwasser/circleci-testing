@@ -5,7 +5,7 @@ services:
     image: fleshgrinder/web-service-dev:latest
     hostname: web-testing
     links:
-      - 'web-server:WURST'
+      - 'web-server:api.fleshgrinder.docker'
     depends_on:
       - 'web-server'
       - 'web-service'
