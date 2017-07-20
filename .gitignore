@@ -4,3 +4,4 @@
 code-coverage/
 target/
 vendor/
+composer.lock
