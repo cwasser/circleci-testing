@@ -5,10 +5,10 @@ services:
     image: fleshgrinder/web-service-dev:latest
     hostname: web-testing
     links:
-      - 'web-server:api.fleshgrinder.docker'
+      - 'web-server:WURST'
     depends_on:
-      - "web-server"
-      - "web-service"
+      - 'web-server'
+      - 'web-service'
     entrypoint: [ 'composer', 'test' ]
     working_dir: '/srv/www/web-testing'
     volumes:

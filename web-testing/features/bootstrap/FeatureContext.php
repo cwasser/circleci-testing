@@ -6,26 +6,34 @@ use Behat\Behat\Context\Context;
  * Defines application features from the specific context.
  */
 class FeatureContext implements Context  {
-    /** @Given API is reachable */
-    public function apiIsReachable() {
-        $timeout = 5.00;
-        $errno = null;
-        $message = 'API is not reachable';
+    /** @Given :host is reachable via port :port */
+    public function apiIsReachable(string $host, string $port): void {
+        $timeout = 6.00;
+        $timeEnd = microtime(true) + $timeout;
 
-        $start_time = microtime(true);
-        while ((microtime(true) - $start_time) * 10000000 < $timeout) {
-           if (fsockopen('api.fleshgrinder.docker/hello-world',80, $errno )) {
-               assert(true);
+        while (microtime(true) < $timeEnd) {
+           if (@fsockopen($host, $port) !== false) {
+               return;
            }
            else {
-               sleep(2);
+               sleep(1);
            }
         }
-        return $message;
+
+        throw new \Exception('API is not reachable');
     }
 
-    /** @Then I should get a :body response when I call :url */
-    public function iShouldGetAResponseWhenICall(string $body, string $url): void {
-        assert(file_get_contents($url) === $body);
+    /** @Then I should get a :expectedBody response when I call :url */
+    public function iShouldGetAResponseWhenICall(string $expectedBody, string $url): void {
+        $context = stream_context_create([
+            'http' => [
+                'method' => "GET",
+                'header' => "Host: api.fleshgrinder.docker\r\n"
+            ]
+        ]);
+        $responseBody = file_get_contents($url, false, $context);
+        if ($responseBody !== $expectedBody) {
+            throw new \Exception("kaputt");
+        }
     }
 }
