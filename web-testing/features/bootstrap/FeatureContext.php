@@ -8,15 +8,15 @@ use Behat\Behat\Context\Context;
 class FeatureContext implements Context  {
     /** @Given :host is reachable via port :port */
     public function apiIsReachable(string $host, string $port): void {
-        $timeout = 6.00;
-        $timeEnd = microtime(true) + $timeout;
+        $timeout = 5.00;
+        $timeStart = microtime(true);
 
-        while (microtime(true) < $timeEnd) {
+        while ($timeStart + microtime(true) < $timeout) {
            if (@fsockopen($host, $port) !== false) {
                return;
            }
            else {
-               sleep(1);
+               usleep(200000);
            }
         }
 
