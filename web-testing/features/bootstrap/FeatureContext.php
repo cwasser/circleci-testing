@@ -11,7 +11,7 @@ class FeatureContext implements Context  {
         $timeout = 5.00;
         $timeStart = microtime(true);
 
-        while ($timeStart + microtime(true) < $timeout) {
+        while ((microtime(true) - $timeStart) < $timeout) {
            if (@fsockopen($host, $port) !== false) {
                return;
            }
