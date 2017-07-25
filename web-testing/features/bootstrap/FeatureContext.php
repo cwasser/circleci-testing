@@ -15,9 +15,8 @@ class FeatureContext implements Context  {
            if (@fsockopen($host, $port) !== false) {
                return;
            }
-           else {
-               usleep(200000);
-           }
+
+           usleep(200000);
         }
 
         throw new \Exception('API is not reachable');
