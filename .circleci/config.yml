@@ -16,7 +16,7 @@ workflows:
       - Build web-server image:
           requires: ["Run tests", "Checkout"]
       - Build web-service image:
-          requires: ["Run tests", "Checkouts"]
+          requires: ["Run tests", "Checkout"]
 
 #      - run integration tests
 #      - run contract tests
