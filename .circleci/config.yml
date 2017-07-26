@@ -14,9 +14,9 @@ workflows:
           requires: ["Checkout", "Build web-service dev image"]
 
       - Build web-server image:
-          requires: ["Generate web-server Docker files"]
+          requires: ["Run tests", "Checkout"]
       - Build web-service image:
-          requires: ["Run web-service unit tests"]
+          requires: ["Run tests", "Checkouts"]
 
 #      - run integration tests
 #      - run contract tests
