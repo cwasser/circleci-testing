@@ -88,12 +88,18 @@ jobs:
     steps:
       - attach_workspace: {at: /src}
       - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v1-prod-tests-{{ checksum "web-service/composer.json" }}-{{ checksum "web-testing/composer.json" }}
+            - v1-prod-tests
       - run:
           name: Execute tests
           command: make prod-test
-      - store_artifacts: {path: code-coverage}
+      - store_artifacts: {path: web-service/code-coverage}
       - save_cache:
-          key: v1-web-tests-{{ checksum "web-service/composer.json" }}-{{ checksum "web-testing/composer.json" }}
+          keys:
+            - v1-prod-tests-{{ checksum "web-service/composer.json" }}-{{ checksum "web-testing/composer.json" }}
+            - v1-prod-tests
           paths:
             - web-service/composer.lock
             - web-service/vendor
