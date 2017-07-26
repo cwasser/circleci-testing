@@ -42,7 +42,6 @@ jobs:
           keys:
             - v1-web-service-dev-{{ checksum "Dockerfile.web-service-dev" }}
             - v1-web-service-dev
-          paths: [/cache/docker/web-service-dev.tar]
       - run:
           name: Load cache
           command: |
@@ -88,17 +87,13 @@ jobs:
       - attach_workspace: {at: /src}
       - setup_remote_docker
       - restore_cache:
-          keys:
-            - v1-prod-tests-{{ checksum "web-service/composer.json" }}-{{ checksum "web-testing/composer.json" }}
-            - v1-prod-tests
+          key: v1-prod-tests-{{ checksum "web-service/composer.lock" }}-{{ checksum "web-testing/composer.lock" }}
       - run:
           name: Execute tests
           command: make prod-test
       - store_artifacts: {path: web-service/code-coverage}
       - save_cache:
-          keys:
-            - v1-prod-tests-{{ checksum "web-service/composer.json" }}-{{ checksum "web-testing/composer.json" }}
-            - v1-prod-tests
+          key: v1-prod-tests-{{ checksum "web-service/composer.lock" }}-{{ checksum "web-testing/composer.lock" }}
           paths:
             - web-service/composer.lock
             - web-service/vendor
