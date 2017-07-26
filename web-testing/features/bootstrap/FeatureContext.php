@@ -6,27 +6,27 @@ use Behat\Behat\Context\Context;
  * Defines application features from the specific context.
  */
 class FeatureContext implements Context  {
-    /** @Given :host is reachable via port :port */
-    public function apiIsReachable(string $host, string $port): void {
-        $timeout = 5.00;
+    /** @When I call :host */
+    public function iCall(string $host, string $port) :void {
+        $timeout   = 5.00;
         $timeStart = microtime(true);
+        $connection = @fsockopen($host, $port);
 
         while ((microtime(true) - $timeStart) < $timeout) {
-           if (@fsockopen($host, $port) !== false) {
-               return;
-           }
-
-           usleep(200000);
+            if ($connection === true) {
+                assert($connection);
+            }
+            usleep(200000);
         }
-
-        throw new \Exception('API is not reachable');
+        assert($connection, "API is not reachable!");
     }
 
-    /** @Then I should get a :expectedBody response when I call :url */
+    /** @Then I should get a :expectedBody response */
     public function iShouldGetAResponseWhenICall(string $expectedBody, string $url): void {
         $responseBody = file_get_contents($url);
-        if ($responseBody !== $expectedBody) {
-            throw new \Exception("Wrong response received");
-        }
+        assert($responseBody === $expectedBody);
     }
 }
+
+
+
