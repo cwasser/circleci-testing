@@ -85,7 +85,6 @@ jobs:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: /src
     steps:
-    steps:
       - attach_workspace: {at: /src}
       - setup_remote_docker
       - restore_cache:
