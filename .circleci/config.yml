@@ -86,19 +86,9 @@ jobs:
     steps:
       - attach_workspace: {at: /src}
       - setup_remote_docker
-      - restore_cache:
-          key: v1-prod-tests-{{ checksum "web-service/composer.lock" }}-{{ checksum "web-testing/composer.lock" }}
       - run:
           name: Execute tests
           command: make prod-test
-      - store_artifacts: {path: web-service/code-coverage}
-      - save_cache:
-          key: v1-prod-tests-{{ checksum "web-service/composer.lock" }}-{{ checksum "web-testing/composer.lock" }}
-          paths:
-            - web-service/composer.lock
-            - web-service/vendor
-            - web-testing/composer.lock
-            - web-testing/vendor
 
   Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
