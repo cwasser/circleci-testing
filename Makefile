@@ -43,3 +43,7 @@ test: ## Execute all tests
 	$(MAKE) -C web-service test
 	$(MAKE) -C web-testing test
 .PHONY: test
+
+prod-test: ## Execute all tests in prod-environment
+	$(MAKE) test ENV=prod
+.PHONY: prod-test
