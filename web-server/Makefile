@@ -6,7 +6,6 @@ clean: ## Cleanup artifacts
 .PHONY: clean
 
 dockerfiles: ## Generate the docker files
-	echo $(__DIR__)
 	docker run -it --rm --name gen-dockerfiles -v $(__DIR__)..://src -w //src/web-server php:cli php bin/gen-dockerfiles
 .PHONY: dockerfiles
 

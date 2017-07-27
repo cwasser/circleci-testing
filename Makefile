@@ -38,12 +38,8 @@ run:
 .PHONY: run
 
 test: ## Execute all tests
-	[ ! -z `docker images -q fleshgrinder/web-server-$(ENV):latest` ] || $(MAKE) -C web-server image ENV=$(ENV)
-	[ ! -z `docker images -q fleshgrinder/web-service-$(ENV):latest` ] || $(MAKE) -C web-service image ENV=$(ENV)
+	[ ! -z `docker images -q fleshgrinder/web-server-dev:latest` ] || $(MAKE) -C web-server image ENV=dev
+	[ ! -z `docker images -q fleshgrinder/web-service-dev:latest` ] || $(MAKE) -C web-service image ENV=dev
 	$(MAKE) -C web-service test
 	$(MAKE) -C web-testing test
 .PHONY: test
-
-prod-test: ## Execute all tests in prod-environment
-	$(MAKE) test ENV=prod
-.PHONY: prod-test

@@ -94,7 +94,7 @@ jobs:
           command: ls -la .
       - run:
           name: Execute tests
-          command: make prod-test
+          command: make test
 
   Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
