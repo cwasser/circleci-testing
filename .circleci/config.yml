@@ -14,9 +14,9 @@ workflows:
           requires: ["Checkout", "Build web-service dev image"]
 
       - Build web-server image:
-          requires: ["Run tests", "Checkout"]
+          requires: ["Run tests"]
       - Build web-service image:
-          requires: ["Run tests", "Checkout"]
+          requires: ["Run tests"]
 
 #      - run integration tests
 #      - run contract tests
@@ -86,6 +86,12 @@ jobs:
     steps:
       - attach_workspace: {at: /src}
       - setup_remote_docker
+      - run:
+          name: current working directory
+          command: pwd
+      - run:
+          name: directory content
+          command: ls -la .
       - run:
           name: Execute tests
           command: make prod-test
