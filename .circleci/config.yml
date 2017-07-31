@@ -27,16 +27,16 @@ workflows:
 jobs:
   Checkout:
     docker: [{image: fleshgrinder/alpine-git-tar}]
-    working_directory: /src
+    working_directory: ~/src
     steps:
       - checkout
-      - persist_to_workspace: {root: /src, paths: [.]}
+      - persist_to_workspace: {root: ~/src, paths: [.]}
 
   Build web-service dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
-    working_directory: /src/web-service
+    working_directory: ~/src/web-service
     steps:
-      - attach_workspace: {at: /src}
+      - attach_workspace: {at: ~/src}
       - setup_remote_docker
       - restore_cache:
           keys:
@@ -83,9 +83,9 @@ jobs:
   Run tests:
     machine:
       enabled: true
-    working_directory: /src
+    working_directory: ~/src
     steps:
-      - attach_workspace: {at: /src}
+      - attach_workspace: {at: ~/src}
       - run:
           name: current working directory
           command: pwd
@@ -98,9 +98,9 @@ jobs:
 
   Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
-    working_directory: /src/web-server
+    working_directory: ~/src/web-server
     steps:
-      - attach_workspace: {at: /src}
+      - attach_workspace: {at: ~/src}
       - setup_remote_docker
       - restore_cache:
           keys:
@@ -134,9 +134,9 @@ jobs:
 
   Build web-service image:
     docker: [{image: fleshgrinder/docker-buildpack}]
-    working_directory: /src/web-service
+    working_directory: ~/src/web-service
     steps:
-      - attach_workspace: {at: /src}
+      - attach_workspace: {at: ~/src}
       - setup_remote_docker
       - restore_cache:
           keys:
