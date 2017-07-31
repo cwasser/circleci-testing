@@ -86,7 +86,6 @@ jobs:
     working_directory: /src
     steps:
       - attach_workspace: {at: /src}
-      - setup_remote_docker
       - run:
           name: current working directory
           command: pwd
