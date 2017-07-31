@@ -81,7 +81,8 @@ jobs:
             fi
 
   Run tests:
-    docker: [{image: fleshgrinder/docker-buildpack}]
+    machine:
+      enabled: true
     working_directory: /src
     steps:
       - attach_workspace: {at: /src}
