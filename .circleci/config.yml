@@ -26,8 +26,7 @@ workflows:
 
 jobs:
   Checkout:
-    machine:
-      enabled: true
+    docker: [{image: fleshgrinder/alpine-git-tar}]
     working_directory: /src
     steps:
       - checkout
