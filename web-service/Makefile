@@ -25,9 +25,12 @@ clear-cache: ## Clear caches
 	$(call composer)
 .PHONY: clear-cache
 
-install: ## Install dependencies
+install: composer.json ## Install dependencies
+composer.json: composer.lock
+composer.lock: vendor/autoload.php
+vendor/autoload.php:
 	$(call composer_ex,install --no-suggest)
-.PHONY install
+	touch $@
 
 test: install ## Run all tests
 	$(call composer)

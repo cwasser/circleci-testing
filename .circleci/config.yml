@@ -102,7 +102,6 @@ jobs:
           command: |
             set +e
             /usr/local/bin/make test
-            cat ~/lol.txt
 
   Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
