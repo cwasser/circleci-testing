@@ -89,6 +89,7 @@ jobs:
       - run:
           name: Execute tests
           command: |
+            set +o pipefail
             echo "yolo"
             make test
 
