@@ -87,10 +87,21 @@ jobs:
     steps:
       - attach_workspace: {at: ~/src}
       - run:
+          name: Install make v4
+          command: |
+            cd /tmp
+            wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
+            tar xvf make-4.1.tar.gz
+            cd make-4.1/
+            ./configure
+            make
+            sudo make install
+            rm -rf make-4.1.tar.gz make-4.1
+      - run:
           name: Execute tests
           command: |
             set +e
-            make test
+            /usr/local/bin/make test
             cat ~/lol.txt
 
   Build web-server image:
