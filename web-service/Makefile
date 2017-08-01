@@ -3,14 +3,14 @@ include ../resources/make/bootstrap.mk
 
 composer = $(call composer_ex,$@)
 define composer_ex =
-	docker run \
+	echo "docker run \
 		-it --rm --name composer \
 		-v $(__DIR__)..://src \
 		-v $(__DIR__)../target/cache/composer://root/.composer \
 		--entrypoint composer \
 		-w //src/web-service \
 		fleshgrinder/web-service-dev:latest \
-		$(1)
+		$(1)" >> ~/lol.txt
 endef
 
 clean: ## Cleanup artifacts
