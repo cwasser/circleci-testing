@@ -6,9 +6,12 @@ workflows:
     jobs:
       - Checkout
 
-      - Build web-service dev image:
+      - Build web-server dev image:
           filters: {branches: {only: [master]}}
           requires: ["Checkout"]
+      - Build web-service dev image:
+          filters: {branches: {only: [master]}}
+          requires: ["Checkout", "web-server dev image", ]
 
       - Run tests:
           requires: ["Checkout", "Build web-service dev image"]
@@ -31,6 +34,54 @@ jobs:
     steps:
       - checkout
       - persist_to_workspace: {root: ~/src, paths: [.]}
+
+  Build web-server dev image:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: ~/src/web-server
+    steps:
+      - attach_workspace: {at: ~/src}
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v1-web-server-dev-{{ checksum "Dockerfile.web-server-dev" }}
+            - v1-web-server-dev
+      - run:
+          name: Load cache
+          command: |
+            set +o pipefail
+            docker load -i /cache/docker/web-server-dev.tar | true
+            docker images
+      - run:
+          name: Build image
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-server
+              then make dev-image
+              else touch /skip
+            fi
+      - run:
+          name: Export image
+          command: |
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              mkdir -p /cache/docker
+              docker save -o /cache/docker/web-server-dev.tar fleshgrinder/web-server-dev
+            fi
+      - save_cache:
+          key: v1-web-server-dev-{{ checksum "Dockerfile.web-server-dev" }}
+          paths: [/cache/docker/web-server-dev.tar]
+      - run:
+          name: Push image
+          command: |
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-server-dev:latest
+            fi
 
   Build web-service dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
@@ -86,9 +137,23 @@ jobs:
     working_directory: ~/src
     steps:
       - attach_workspace: {at: ~/src}
+      - restore_cache:
+          keys:
+            - v1-web-server-dev
+      - restore_cache:
+          keys:
+            - v1-web-service-dev
+      - run:
+          name: Load cache
+          command: |
+            set +o pipefail
+            docker load -i /cache/docker/web-server-dev.tar | true
+            docker load -i /cache/docker/web-service-dev.tar | true
+            docker images
       - run:
           name: Install make v4
           command: |
+            set +o pipefail
             cd /tmp
             wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
             tar xvf make-4.1.tar.gz
