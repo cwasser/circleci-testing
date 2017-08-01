@@ -25,13 +25,8 @@ clear-cache: ## Clear caches
 	$(call composer)
 .PHONY: clear-cache
 
-install: composer.json ## Install dependencies
-composer.json: composer.lock
-composer.lock: vendor/autoload.php
-vendor/autoload.php:
-	echo __DIR__ > ~/lol.txt
+install: ## Install dependencies
 	$(call composer_ex,install --no-suggest)
-	touch $@
 
 test: install ## Run all tests
 	$(call composer)
