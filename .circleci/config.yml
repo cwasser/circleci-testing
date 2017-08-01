@@ -88,7 +88,9 @@ jobs:
       - attach_workspace: {at: ~/src}
       - run:
           name: Execute tests
-          command: make test
+          command: |
+            echo "yolo"
+            make test
 
   Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
