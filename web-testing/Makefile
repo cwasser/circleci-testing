@@ -29,7 +29,9 @@ install: composer.json ## Install dependencies
 composer.json: composer.lock
 composer.lock: vendor/autoload.php
 vendor/autoload.php:
+	echo "call composer install"
 	$(call composer_ex,install --no-suggest)
+	echo "composer install done"
 	touch $@
 
 test: install ## Run all tests
