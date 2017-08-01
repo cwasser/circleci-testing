@@ -87,12 +87,6 @@ jobs:
     steps:
       - attach_workspace: {at: ~/src}
       - run:
-          name: current working directory
-          command: pwd
-      - run:
-          name: directory content
-          command: ls -la .
-      - run:
           name: Execute tests
           command: make test
 
