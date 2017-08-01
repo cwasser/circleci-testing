@@ -48,7 +48,7 @@
 	"scripts": {
 		"psalm": "psalm --find-dead-code",
 		"phpstan": "phpstan analyze --ansi --configuration=phpstan.neon --level=5 --no-progress src/main/php/ src/test/php/",
-		"phpunit": "phpdbg -qrr ./vendor/bin/phpunit --colors=always",
+		"phpunit": "phpdbg -qrr ./vendor/phpunit/phpunit/phpunit --colors=always",
 		"test": [
 			"@psalm",
 			"@phpstan",
