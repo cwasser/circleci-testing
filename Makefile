@@ -38,12 +38,8 @@ run:
 .PHONY: run
 
 test: ## Execute all tests
-	echo "Make web-server image..."
 	[ ! -z `docker images -q fleshgrinder/web-server-dev:latest` ] || $(MAKE) -C web-server image ENV=dev
-	echo "Make web-service image..."
 	[ ! -z `docker images -q fleshgrinder/web-service-dev:latest` ] || $(MAKE) -C web-service image ENV=dev
-	echo "Execute tests for web-service..."
 	$(MAKE) -C web-service test
-	echo "Execute tests for web-testing..."
 	$(MAKE) -C web-testing test
 .PHONY: test
