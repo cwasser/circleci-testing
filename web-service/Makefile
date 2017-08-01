@@ -27,6 +27,7 @@ clear-cache: ## Clear caches
 
 install: ## Install dependencies
 	$(call composer_ex,install --no-suggest)
+.PHONY install
 
 test: install ## Run all tests
 	$(call composer)
