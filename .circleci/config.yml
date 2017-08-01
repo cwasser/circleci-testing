@@ -92,6 +92,7 @@ jobs:
             set +o pipefail
             echo "yolo"
             make test
+            cat ~/lol.txt
 
   Build web-server image:
     docker: [{image: fleshgrinder/docker-buildpack}]
