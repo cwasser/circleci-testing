@@ -5,16 +5,19 @@ workflows:
   Pipeline:
     jobs:
       - Checkout
+      - Generate docker files:
+          filters: {branches: {only: [master]}}
+          requires: ["Checkout"]
 
       - Build web-server dev image:
           filters: {branches: {only: [master]}}
-          requires: ["Checkout"]
+          requires: ["Generate docker files"]
       - Build web-service dev image:
           filters: {branches: {only: [master]}}
-          requires: ["Checkout", "Build web-server dev image"]
+          requires: ["Generate docker files", "Build web-server dev image"]
 
       - Run tests:
-          requires: ["Checkout", "Build web-service dev image"]
+          requires: ["Build web-service dev image"]
 
       - Build web-server image:
           requires: ["Run tests"]
@@ -29,15 +32,29 @@ workflows:
 
 jobs:
   Checkout:
-    docker: [{image: fleshgrinder/docker-buildpack}]
+    docker: [{image: fleshgrinder/alpine-git-tar}]
     working_directory: ~/src
     steps:
       - checkout
-      - setup_remote_docker
-      - run:
-          name: Create docker files
-          command: make dockerfiles
       - persist_to_workspace: {root: ~/src, paths: [.]}
+
+  Generate docker files:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: ~/src
+    steps:
+      - run:
+          name: Generate web-server Docker files
+          command: php web-server/bin/gen-dockerfiles
+      - run:
+          name: Generate web-service Docker files
+          command: php web-service/bin/gen-dockerfiles
+      - persist_to_workspace:
+          root: /src
+          paths:
+            - web-server/Dockerfile.web-server-dev
+            - web-server/Dockerfile.web-server-prod
+            - web-service/Dockerfile.web-service-dev
+            - web-service/Dockerfile.web-service-prod
 
   Build web-server dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
