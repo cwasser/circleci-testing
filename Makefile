@@ -22,6 +22,11 @@ docker-cleaner: ## Cleanup all docker resources
 	docker system prune --all --force
 .PHONY: docker-cleaner
 
+dockerfiles: ## Generate all docker files
+	$(MAKE) -C web-server dockerfiles
+	$(MAKE) -C web-service dockerfiles
+.PHONY: dockerfiles
+
 dev-server: ## Start development server
 	$(MAKE) run ENV=dev
 .PHONY: dev-server

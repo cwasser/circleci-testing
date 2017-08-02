@@ -33,6 +33,9 @@ jobs:
     working_directory: ~/src
     steps:
       - checkout
+      - run:
+          name: Create docker files
+          command: make dockerfiles
       - persist_to_workspace: {root: ~/src, paths: [.]}
 
   Build web-server dev image:
