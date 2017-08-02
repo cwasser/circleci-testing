@@ -29,7 +29,7 @@ workflows:
 
 jobs:
   Checkout:
-    docker: [{image: fleshgrinder/alpine-git-tar}]
+    docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: ~/src
     steps:
       - checkout
