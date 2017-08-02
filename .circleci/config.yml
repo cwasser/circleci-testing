@@ -39,7 +39,7 @@ jobs:
       - persist_to_workspace: {root: ~/src, paths: [.]}
 
   Generate docker files:
-    docker: [{image: php:cli}]
+    docker: [{image: "php:cli"}]
     working_directory: ~/src
     steps:
       - run:
