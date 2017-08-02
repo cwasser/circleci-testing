@@ -77,7 +77,7 @@ jobs:
           name: Build image
           command: |
             COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            if git diff "${COMMIT_RANGE}" --name-status | grep | grep "web-server/resources/docker/Dockerfile.template"
+            if git diff "${COMMIT_RANGE}" --name-status | grep "web-server/resources/docker/Dockerfile.template"
               then make dev-image
               else touch /skip
             fi
