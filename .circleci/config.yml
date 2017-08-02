@@ -156,6 +156,7 @@ jobs:
   Run tests:
     machine:
       enabled: true
+      image: circleci/classic:edge
     working_directory: ~/src
     steps:
       - attach_workspace: {at: ~/src}
