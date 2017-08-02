@@ -5,7 +5,7 @@ composer = $(call composer_ex,$@)
 define composer_ex =
 	docker run \
 		-it --rm --name composer \
-		-v $(__DIR__)..://src \
+		-v $(__DIR__)..://src:rw \
 		-v $(__DIR__)../target/cache/composer://root/.composer \
 		--entrypoint composer \
 		-w //src/web-testing \
