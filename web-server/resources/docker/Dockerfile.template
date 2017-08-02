@@ -134,4 +134,4 @@ rm -rf \
 /var/tmp/* \
 && \
 nginx -V && \
-printf '\n\033[32mFinished!\033[0m\n\n'
+printf '\n\033[32mFinished!!!\033[0m\n\n'

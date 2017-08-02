@@ -187,4 +187,4 @@ rm -rf \
 ([ ! -f /usr/local/bin/composer ] || composer -v) && \
 php-fpm -m && \
 php-fpm -v && \
-printf '\n\033[32mFinished!\033[0m\n\n'
+printf '\n\033[32mFinished!!!\033[0m\n\n'

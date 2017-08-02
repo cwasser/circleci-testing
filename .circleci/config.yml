@@ -77,7 +77,7 @@ jobs:
           name: Build image
           command: |
             COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-server
+            if git diff "${COMMIT_RANGE}" --name-status | grep | grep "web-server/resources/docker/Dockerfile.template"
               then make dev-image
               else touch /skip
             fi
@@ -125,7 +125,7 @@ jobs:
           name: Build image
           command: |
             COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
-            if git diff "${COMMIT_RANGE}" --name-status | grep Dockerfile.web-service
+            if git diff "${COMMIT_RANGE}" --name-status | grep "web-service/resources/docker/Dockerfile.template"
               then make dev-image
               else touch /skip
             fi
@@ -162,16 +162,20 @@ jobs:
       - attach_workspace: {at: ~/src}
       - restore_cache:
           keys:
+            - v1-web-server-dev-{{ checksum "web-server/Dockerfile.web-server-dev" }}
             - v1-web-server-dev
       - restore_cache:
           keys:
+            - v1-web-service-dev-{{ checksum "web-service/Dockerfile.web-service-dev" }}
             - v1-web-service-dev
       - run:
           name: Load cache
           command: |
             set +o pipefail
-            docker load -i /cache/docker/web-server-dev.tar | true
-            docker load -i /cache/docker/web-service-dev.tar | true
+            test -f /cache/docker/web-server-dev.tar \
+              && docker load -i /cache/docker/web-server-dev.tar | true
+            test -f load -i /cache/docker/web-service-dev.tar \
+              && docker load -i /cache/docker/web-service-dev.tar | true
             docker images
       - run:
           name: Install make v4
