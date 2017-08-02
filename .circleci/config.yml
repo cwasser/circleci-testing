@@ -42,6 +42,7 @@ jobs:
     docker: [{image: "php:cli"}]
     working_directory: ~/src
     steps:
+      - attach_workspace: {at: ~/src}
       - run:
           name: Generate web-server Docker files
           command: php web-server/bin/gen-dockerfiles
