@@ -33,6 +33,7 @@ jobs:
     working_directory: ~/src
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Create docker files
           command: make dockerfiles
