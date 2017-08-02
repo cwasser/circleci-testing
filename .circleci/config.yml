@@ -11,7 +11,7 @@ workflows:
           requires: ["Checkout"]
       - Build web-service dev image:
           filters: {branches: {only: [master]}}
-          requires: ["Checkout", "web-server dev image", ]
+          requires: ["Checkout", "Build web-server dev image"]
 
       - Run tests:
           requires: ["Checkout", "Build web-service dev image"]
