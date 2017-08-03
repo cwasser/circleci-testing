@@ -51,3 +51,8 @@ test: ## Execute all tests
 	$(MAKE) -C web-service test
 	$(MAKE) -C web-testing test
 .PHONY: test
+
+prod-test: ## Execute all tests with prod-environment
+	$(MAKE) -C web-service prod-test
+	$(MAKE) -C web-testing prod-test
+.PHONY: test
