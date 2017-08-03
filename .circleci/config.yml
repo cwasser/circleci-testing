@@ -34,10 +34,12 @@ workflows:
           filters: {branches: {only: [master]}}
           requires: ["Checkout"]
 
+      - Build web-server dev image:
+          requires: ["Checkout"]
       - Build web-service dev image:
           requires: ["Checkout"]
       - Run web-service unit tests:
-          requires: ["Build web-server dev image"]
+          requires: ["Build web-service dev image"]
 
       - Build web-server prod image:
           requires: ["Build web-service dev image"]
