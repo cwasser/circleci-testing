@@ -31,3 +31,17 @@ services:
       - '../../web-service/config/php:/usr/local/etc/php:ro'
       - '../../web-service/src/main/php:/srv/www/web-service/src/main/php:ro'
       - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
+
+  # lb (linkerd) for MS and user profiling
+  # for testing we are putting it in front iof the nginx
+  l5d:
+    image: buoyantio/linkerd:1.1.2
+    links:
+      - web-server
+    ports:
+      - "4140:4140" # Later 8080?
+      - "9990:9990"
+    volumes:
+      - '../linkerd/linkerd.yaml:/usr/local/etc/linkerd/linkerd.yaml:ro'
+    command: >
+      /usr/local/etc/linkerd/linkerd.yaml
