@@ -35,6 +35,11 @@ prod-server: ## Start production server
 	$(MAKE) run ENV=prod
 .PHONY: server
 
+install: ## Installs all dependencies
+	$(MAKE) -C web-service install
+	$(MAKE) -C web-testing install
+.PHONY: install
+
 run:
 	docker-compose --file config/docker/compose-$(ENV).yml pull --ignore-pull-failures --parallel
 	[ -f web-server/Dockerfile.web-server-$(ENV) ] || $(MAKE) -C web-server dockerfiles
