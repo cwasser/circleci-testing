@@ -40,8 +40,8 @@ workflows:
           requires: ["Build web-server dev image"]
 
       - Build web-server prod image:
-          requires: ["Run web-service unit tests"]
-      - Build web-server prod image:
+          requires: ["Build web-service dev image"]
+      - Build web-service prod image:
           requires: ["Run web-service unit tests"]
 
 
@@ -51,6 +51,8 @@ workflows:
 #      - run contract tests
 #      - run end-to-end tests
 
+#      - Bundle web-server prod image with source-code:
+#      - Bundle web-service prod image with source-code:
 #      - Push web-server prod image:
 #          filters: {branches: {only: [master]}}
 #          requires: ["Build web-server prod image", "Run tests"]
