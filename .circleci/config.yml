@@ -31,10 +31,10 @@ templates:
 workflows:
   version: 2
 
-#  apt-php-pipepline:
+#  apt-php-pipeline:
 #    jobs:
 # >> build apt-package which contains our optimized php stack, deploy to artifactory
-#  apt-php-dev-pipepline:
+#  apt-php-dev-pipeline:
 #    jobs:
 # >> build apt-package which contains our optimized php stack for dev, deploy to artifactory
 #  apt-proto-pipeline
@@ -68,11 +68,12 @@ workflows:
           requires: ["Generate docker files"]
       - Build web-service dev image:
           requires: ["Generate docker files"]
+
       - Run web-service unit tests:
           requires: ["Build web-service dev image"]
 
       - Build web-server prod image:
-          requires: ["Generate docker files", "Build web-service dev image"]
+          requires: ["Generate docker files", "Run web-service unit tests"]
       - Build web-service prod image:
           requires: ["Generate docker files", "Run web-service unit tests"]
 
@@ -83,14 +84,17 @@ workflows:
 #      - run contract tests
 #      - run end-to-end tests
 
+#      - Push web-server dev image:
+#          requires: ["Run web-testing tests"]
+#      - Push web-service dev image:
+#          requires: ["Run web-testing tests"]
+
 #      - Bundle web-server prod image with source-code:
 #      - Bundle web-service prod image with source-code:
 #      - Push web-server prod image:
-#          filters: {branches: {only: [master]}}
-#          requires: ["Build web-server prod image", "Run tests"]
+#          requires: []
 #      - Push web-service prod image:
-#          filters: {branches: {only: [master]}}
-#          requires: ["Build web-service prod image", "Run tests"]
+#          requires: []
 
 #      - deploy
 
@@ -158,16 +162,6 @@ jobs:
       - save_cache:
           key: v1-web-server-dev-{{ checksum "Dockerfile.web-server-dev" }}
           paths: [/cache/docker/web-server-dev.tar]
-      - run:
-          name: Push image
-          command: |
-            if [ -f /skip ]
-            then
-              echo skipping
-            else
-              docker login -u fleshgrinder -p "${DOCKER_PASS}"
-              docker push fleshgrinder/web-server-dev:latest
-            fi
 
   Build web-service dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
@@ -206,16 +200,6 @@ jobs:
       - save_cache:
           key: v1-web-service-dev-{{ checksum "Dockerfile.web-service-dev" }}
           paths: [/cache/docker/web-service-dev.tar]
-      - run:
-          name: Push image
-          command: |
-            if [ -f /skip ]
-            then
-              echo skipping
-            else
-              docker login -u fleshgrinder -p "${DOCKER_PASS}"
-              docker push fleshgrinder/web-service-dev:latest
-            fi
 
   Build web-server prod image:
     docker: [{image: fleshgrinder/docker-buildpack}]
@@ -236,12 +220,22 @@ jobs:
             docker images
       - run:
           name: Build image
-          command: make prod-image
+          command: |
+            COMMIT_RANGE=$(echo "${CIRCLE_COMPARE_URL}" | sed 's:^.*/compare/::g')
+            if git diff "${COMMIT_RANGE}" --name-status | grep "web-server/resources/docker/Dockerfile.template"
+              then make prod-image
+              else touch /skip
+            fi
       - run:
           name: Export image
           command: |
-            mkdir -p /cache/docker
-            docker save -o /cache/docker/web-server-prod.tar fleshgrinder/web-server-prod
+            if [ -f /skip ]
+            then
+              echo skipping
+            else
+              mkdir -p /cache/docker
+              docker save -o /cache/docker/web-server-prod.tar fleshgrinder/web-server-prod
+            fi
       - save_cache:
           key: v1-web-server-prod-{{ checksum "Dockerfile.web-server-prod" }}
           paths: [/cache/docker/web-server-prod.tar]
@@ -322,15 +316,15 @@ jobs:
       - <<: *make-v4-for-machine-save_cache
       - restore_cache:
           keys:
-            - v1-web-service-dev-{{ checksum "web-service/Dockerfile.web-service-dev" }}
+            - v1-web-service-dev-{{ checksum "../web-service/Dockerfile.web-service-dev" }}
             - v1-web-service-dev
       - restore_cache:
           keys:
-            - v1-web-server-prod-{{ checksum "web-server/Dockerfile.web-server-prod" }}
+            - v1-web-server-prod-{{ checksum "../web-server/Dockerfile.web-server-prod" }}
             - v1-web-server-prod
       - restore_cache:
           keys:
-            - v1-web-service-prod-{{ checksum "web-server/Dockerfile.web-service-prod" }}
+            - v1-web-service-prod-{{ checksum "../web-server/Dockerfile.web-service-prod" }}
             - v1-web-service-prod
       - run:
           name: Load generated docker images from cache
@@ -348,54 +342,6 @@ jobs:
           command: |
             set +e
             /usr/local/bin/make prod-test
-
-#  Run web-testing tests:
-#    machine:
-#      enabled: true
-#      image: circleci/classic:edge
-#    working_directory: ~/src/web-testing
-#    steps:
-#      - attach_workspace: {at: ~/src}
-#      - restore_cache:
-#          keys:
-#            - v1-web-service-dev-{{ checksum "web-service/Dockerfile.web-service-dev" }}
-#            - v1-web-service-dev
-#      - restore_cache:
-#          keys:
-#            - v1-web-server-prod-{{ checksum "web-server/Dockerfile.web-server-prod" }}
-#            - v1-web-server-prod
-#      - restore_cache:
-#          keys:
-#            - v1-web-service-prod-{{ checksum "web-server/Dockerfile.web-service-prod" }}
-#            - v1-web-service-prod
-#      - run:
-#          name: Load generated docker images from cache
-#          command: |
-#            set +o pipefail
-#            test -f /cache/docker/web-server-dev.tar \
-#              && docker load -i /cache/docker/web-server-dev.tar
-#            test -f load -i /cache/docker/web-server-prod.tar \
-#              && docker load -i /cache/docker/web-server-prod.tar
-#            test -f load -i /cache/docker/web-service-prod.tar \
-#              && docker load -i /cache/docker/web-service-prod.tar
-#            docker images
-#      - run:
-#          name: Install make v4
-#          command: |
-#            set +o pipefail
-#            cd /tmp
-#            wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
-#            tar xvf make-4.1.tar.gz
-#            cd make-4.1/
-#            ./configure
-#            make
-#            sudo make install
-#            rm -rf make-4.1.tar.gz make-4.1
-#      - run:
-#          name: Execute tests
-#          command: |
-#            set +e
-#            /usr/local/bin/make test
 
   Push web-server prod image:
     docker: [{image: fleshgrinder/docker-buildpack}]
