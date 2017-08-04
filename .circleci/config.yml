@@ -324,7 +324,7 @@ jobs:
             - v2-web-server-prod
       - restore_cache:
           keys:
-            - v2-web-service-prod-{{ checksum "../web-server/Dockerfile.web-service-prod" }}
+            - v2-web-service-prod-{{ checksum "../web-service/Dockerfile.web-service-prod" }}
             - v2-web-service-prod
       - run:
           name: Load generated docker images from cache
@@ -341,7 +341,7 @@ jobs:
           name: Execute tests
           command: |
             set +e
-            /usr/local/bin/make prod-test
+            make prod-test
 
   Push web-server prod image:
     docker: [{image: fleshgrinder/docker-buildpack}]
