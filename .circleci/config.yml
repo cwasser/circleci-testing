@@ -52,16 +52,16 @@ workflows:
           requires: ["Checkout"]
 
       - Build web-server dev image:
-          requires: ["Checkout"]
+          requires: ["Generate docker files"]
       - Build web-service dev image:
-          requires: ["Checkout"]
+          requires: ["Generate docker files"]
       - Run web-service unit tests:
           requires: ["Build web-service dev image"]
 
       - Build web-server prod image:
-          requires: ["Build web-service dev image"]
+          requires: ["Generate docker files", "Build web-service dev image"]
       - Build web-service prod image:
-          requires: ["Run web-service unit tests"]
+          requires: ["Generate docker files", "Run web-service unit tests"]
 
 
       - Run web-testing tests:
