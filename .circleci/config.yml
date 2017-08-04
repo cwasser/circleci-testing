@@ -347,12 +347,7 @@ jobs:
             docker images
       - run:
           name: Execute tests
-          command: |
-            set +e
-            make --version
-            pwd
-            ls -la .
-            make prod-test
+          command: make prod-test
 
   Push web-server dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
