@@ -35,7 +35,8 @@ test: install ## Run all tests
 	docker-compose -f ../config/docker/compose-dev.yml -f config/docker/compose-test.yml up --abort-on-container-exit --remove-orphans
 .PHONY: test
 
-prod-test: install ## Run all tests
+prod-test: ## Run all tests
+	$(call composer_ex,install --no-suggest)
 	docker-compose -f ../config/docker/compose-prod.yml -f config/docker/compose-test.yml up --abort-on-container-exit --remove-orphans
 .PHONY: test
 
