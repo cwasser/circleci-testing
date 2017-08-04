@@ -3,9 +3,11 @@ version: 2
 templates:
   make-v4-for-machine-executor:
     restore_cache: &make-v4-for-machine-executor-restore_cache
-      keys:
-        - v1-make4
-    run: &make-v4-for-machine-executor-compile
+      restore_cache:
+        keys:
+          - v1-make4
+  executor-compile: &make-v4-for-machine-executor-compile
+    run:
       name: Install make v4
       command: |
         set +o pipefail
@@ -20,10 +22,11 @@ templates:
           sudo make install
           rm -rf make-4.1.tar.gz make-4.1
         fi;
+  save_cache: &make-v4-for-machine-save_cache
     save_cache: &make-v4-for-machine-save_cache
       key: v1-make4
       paths:
-        - /usr/local/bin/make
+       - /usr/local/bin/make
 
 workflows:
   version: 2
@@ -269,12 +272,9 @@ jobs:
     working_directory: ~/src/web-service
     steps:
       - attach_workspace: {at: ~/src}
-      -
-        <<: *make-v4-for-machine-executor-restore_cache
-      -
-        <<: *make-v4-for-machine-executor-compile
-      -
-        <<: *make-v4-for-machine-save_cache
+      - <<: *make-v4-for-machine-executor-restore_cache
+      - <<: *make-v4-for-machine-executor-compile
+      - <<: *make-v4-for-machine-save_cache
       - restore_cache:
           keys:
             - v1-web-service-composer-{{ checksum "composer.lock" }}
