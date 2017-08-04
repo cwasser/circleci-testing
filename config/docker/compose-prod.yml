@@ -2,7 +2,6 @@ version: '3.1'
 
 services:
   web-server:
-    build:
     image: fleshgrinder/web-server-prod:latest
     domainname: api.fleshgrinder.docker
     hostname: web-server
@@ -17,7 +16,6 @@ services:
       - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
 
   web-service:
-    build:
     image: fleshgrinder/web-service-prod:latest
     domainname: api.fleshgrinder.docker
     environment:
