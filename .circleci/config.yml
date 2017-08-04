@@ -11,7 +11,7 @@ templates:
       name: Install make v4
       command: |
         set +o pipefail
-        MAKE_MAJOR_VERSION=$(make -v | grep -Eo "Make\s\d\.\d.\d" | cut -d " " -f2 | cut -d. -f1 )
+        MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
         if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
           cd /tmp
           wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
