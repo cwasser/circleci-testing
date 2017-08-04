@@ -1,29 +1,29 @@
 version: 2
 
 templates:
-  make-v4-for-machine-executor: &make-v4-for-machine-executor
-    - restore_cache:
-        keys:
-          - v1-make4
-    - run:
-        name: Install make v4
-        command: |
-          set +o pipefail
-          MAKE_MAJOR_VERSION=$(make -v | grep -Eo "Make\s\d\.\d.\d" | cut -d " " -f2 | cut -d. -f1 )
-          if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
-            cd /tmp
-            wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
-            tar xvf make-4.1.tar.gz
-            cd make-4.1/
-            ./configure
-            make
-            sudo make install
-            rm -rf make-4.1.tar.gz make-4.1
-          fi;
-      - save_cache:
-          key: v1-make4
-          paths:
-            - /usr/local/bin/make
+  make-v4-for-machine-executor:
+    restore_cache: &make-v4-for-machine-executor-restore_cache
+      keys:
+        - v1-make4
+    run: &make-v4-for-machine-executor-compile
+      name: Install make v4
+      command: |
+        set +o pipefail
+        MAKE_MAJOR_VERSION=$(make -v | grep -Eo "Make\s\d\.\d.\d" | cut -d " " -f2 | cut -d. -f1 )
+        if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
+          cd /tmp
+          wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
+          tar xvf make-4.1.tar.gz
+          cd make-4.1/
+          ./configure
+          make
+          sudo make install
+          rm -rf make-4.1.tar.gz make-4.1
+        fi;
+    save_cache: &make-v4-for-machine-save_cache
+      key: v1-make4
+      paths:
+        - /usr/local/bin/make
 
 workflows:
   version: 2
@@ -34,23 +34,27 @@ workflows:
           filters: {branches: {only: [master]}}
           requires: ["Checkout"]
 
+      - Build web-server dev image:
+          requires: ["Checkout"]
       - Build web-service dev image:
           requires: ["Checkout"]
       - Run web-service unit tests:
-          requires: ["Build web-server dev image"]
+          requires: ["Build web-service dev image"]
 
       - Build web-server prod image:
-          requires: ["Run web-service unit tests"]
-      - Build web-server prod image:
+          requires: ["Build web-service dev image"]
+      - Build web-service prod image:
           requires: ["Run web-service unit tests"]
 
 
-      - Run integration tests:
+      - Run web-testing tests:
           requires: ["Build web-server prod image", "Build web-server prod image"]
 
 #      - run contract tests
 #      - run end-to-end tests
 
+#      - Bundle web-server prod image with source-code:
+#      - Bundle web-service prod image with source-code:
 #      - Push web-server prod image:
 #          filters: {branches: {only: [master]}}
 #          requires: ["Build web-server prod image", "Run tests"]
@@ -248,7 +252,9 @@ jobs:
     working_directory: ~/src/web-service
     steps:
       - attach_workspace: {at: ~/src}
-      <<: *make-v4-for-machine-executor
+      - <<: *make-v4-for-machine-executor-restore_cache
+      - <<: *make-v4-for-machine-executor-compile
+      - <<: *make-v4-for-machine-save_cache
       - restore_cache:
           keys:
             - v1-web-service-composer-{{ checksum "composer.lock" }}
@@ -274,11 +280,44 @@ jobs:
       - store_artifacts: {path: code-coverage}
 
 
-  Run web-testing integration tests:
+  Run web-testing tests:
     machine:
       enabled: true
       image: circleci/classic:edge
     working_directory: ~/src/web-testing
+    steps:
+      - attach_workspace: {at: ~/src}
+      - <<: *make-v4-for-machine-executor-restore_cache
+      - <<: *make-v4-for-machine-executor-compile
+      - <<: *make-v4-for-machine-save_cache
+      - restore_cache:
+          keys:
+            - v1-web-service-dev-{{ checksum "web-service/Dockerfile.web-service-dev" }}
+            - v1-web-service-dev
+      - restore_cache:
+          keys:
+            - v1-web-server-prod-{{ checksum "web-server/Dockerfile.web-server-prod" }}
+            - v1-web-server-prod
+      - restore_cache:
+          keys:
+            - v1-web-service-prod-{{ checksum "web-server/Dockerfile.web-service-prod" }}
+            - v1-web-service-prod
+      - run:
+          name: Load generated docker images from cache
+          command: |
+            set +o pipefail
+            test -f /cache/docker/web-server-dev.tar \
+              && docker load -i /cache/docker/web-server-dev.tar
+            test -f load -i /cache/docker/web-server-prod.tar \
+              && docker load -i /cache/docker/web-server-prod.tar
+            test -f load -i /cache/docker/web-service-prod.tar \
+              && docker load -i /cache/docker/web-service-prod.tar
+            docker images
+      - run:
+          name: Execute tests
+          command: |
+            set +e
+            /usr/local/bin/make prod-test
 
 #  Run web-testing tests:
 #    machine:
