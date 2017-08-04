@@ -75,7 +75,7 @@ workflows:
       - Build web-server prod image:
           requires: ["Run web-service unit tests"]
       - Build web-service prod image:
-          requires: ["Build web-server prod image"]
+          requires: ["Run web-service unit tests"]
 
       # Run integration tests
       - Run web-testing tests:
