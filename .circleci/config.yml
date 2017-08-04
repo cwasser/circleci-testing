@@ -330,18 +330,18 @@ jobs:
           command: |
             set +o pipefail
 
-            cachedImages={
+            declare -a cachedImages=(
               "/tmp/docker/web-server-dev.tar"
               "/tmp/docker/web-server-prod.tar"
               "/tmp/docker/web-service-prod.tar"
-            }
+            )
 
-            for cachedImage in $cachedImages;
+            for cachedImage in "${cachedImages[@]}";
             do
-                if [ -f "$cachedImage" ]
-                  then docker load -i $cachedImage
-                  else echo "No cache available for $(basename $cachedImage)"
-                fi
+              if [ -f "$cachedImage" ]
+                then docker load -i $cachedImage
+                else echo "No cache available for $(basename $cachedImage)"
+              fi
             done
 
             docker images
