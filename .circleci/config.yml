@@ -290,8 +290,7 @@ jobs:
           name: Load generated docker images from cache
           command: |
             set +o pipefail
-            test -f load -i /tmp/docker/web-service-prod.tar \
-              && docker load -i /tmp/docker/web-service-prod.tar
+            docker load -i /tmp/docker/web-service-prod.tar | true
             docker images
       - run:
           name: Execute unit tests
@@ -330,12 +329,21 @@ jobs:
           name: Load generated docker images from cache
           command: |
             set +o pipefail
-            test -f /tmp/docker/web-server-dev.tar \
-              && docker load -i /tmp/docker/web-server-dev.tar
-            test -f load -i /tmp/docker/web-server-prod.tar \
-              && docker load -i /tmp/docker/web-server-prod.tar
-            test -f load -i /tmp/docker/web-service-prod.tar \
-              && docker load -i /tmp/docker/web-service-prod.tar
+
+            cachedImages={
+              "/tmp/docker/web-server-dev.tar"
+              "/tmp/docker/web-server-prod.tar"
+              "/tmp/docker/web-service-prod.tar"
+            }
+
+            for cachedImage in $cachedImages;
+            do
+                if [ -f "$cachedImage" ]
+                  then docker load -i $cachedImage
+                  else echo "No cache available for $(basename $cachedImage)"
+                fi
+            done
+
             docker images
       - run:
           name: Execute tests
