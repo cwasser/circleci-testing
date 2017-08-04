@@ -23,7 +23,7 @@ templates:
           rm -rf make-4.1.tar.gz make-4.1
         fi;
   save_cache: &make-v4-for-machine-save_cache
-    save_cache: &make-v4-for-machine-save_cache
+    save_cache:
       key: v1-make4
       paths:
         - /usr/local/bin/make
@@ -31,6 +31,16 @@ templates:
 workflows:
   version: 2
 
+#  apt-php-pipepline:
+#    jobs:
+# >> build apt-package which contains our optimized php stack, deploy to artifactory
+#  apt-php-dev-pipepline:
+#    jobs:
+# >> build apt-package which contains our optimized php stack for dev, deploy to artifactory
+#  apt-proto-pipeline
+#    jobs:
+# >> build apt-package which contains protobuf related stuff for php, deploy to artifactory
+#
 #  web-server-pipeline:
 #    jobs:
 # >> build web-server base image "snapshot" (without copying source-code)
