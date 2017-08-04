@@ -284,7 +284,7 @@ jobs:
             - v2-web-service-composer-{{ checksum "composer.lock" }}
             - v2-web-service-composer
           keys:
-            - v2-web-service-dev-{{ checksum "web-service/Dockerfile.web-service-dev" }}
+            - v2-web-service-dev-{{ checksum "Dockerfile.web-service-dev" }}
             - v2-web-service-dev
       - run:
           name: Load generated docker images from cache
