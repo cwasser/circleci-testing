@@ -84,19 +84,19 @@ workflows:
 #      - run contract tests
 #      - run end-to-end tests
 
-#      - Push web-server dev image:
-#          requires: ["Run web-testing tests"]
-#      - Push web-service dev image:
-#          requires: ["Run web-testing tests"]
+      - Push web-server dev image:
+          requires: ["Run web-testing tests"]
+      - Push web-service dev image:
+          requires: ["Run web-testing tests"]
+      - Push web-server prod image:
+          requires: ["Run web-testing tests"]
+      - Push web-service prod image:
+          requires: ["Run web-testing tests"]
 
 #      - Bundle web-server prod image with source-code:
 #      - Bundle web-service prod image with source-code:
-#      - Push web-server prod image:
-#          requires: []
-#      - Push web-service prod image:
-#          requires: []
 
-#      - deploy
+#      - deploy fully bundled artifacts
 
 jobs:
   Checkout:
@@ -209,7 +209,7 @@ jobs:
       - setup_remote_docker
       - restore_cache:
           keys:
-            - v2-web-server-prod{{ checksum "Dockerfile.web-server-prod" }}
+            - v2-web-server-prod-{{ checksum "Dockerfile.web-server-prod" }}
             - v2-web-server-prod
           paths: [/tmp/docker/web-server-prod.tar]
       - run:
@@ -248,7 +248,7 @@ jobs:
       - setup_remote_docker
       - restore_cache:
           keys:
-            - v2-web-service-prod{{ checksum "Dockerfile.web-service-prod" }}
+            - v2-web-service-prod-{{ checksum "Dockerfile.web-service-prod" }}
             - v2-web-service-prod
           paths: [/tmp/docker/web-service-prod.tar]
       - run:
@@ -343,6 +343,56 @@ jobs:
             set +e
             make prod-test
 
+  Push web-server dev image:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: ~/src/web-server
+    steps:
+      - attach_workspace: {at: ~/src}
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v2-web-server-dev-{{ checksum "Dockerfile.web-server-dev" }}
+            - v2-web-server-dev
+          paths: [/tmp/docker/web-server-dev.tar]
+      - run:
+          name: Load cache
+          command: |
+            set +o pipefail
+            docker load -i /tmp/docker/web-server-dev.tar | true
+            docker images
+      - run:
+          name: Push image
+          command: |
+            if [ "${CIRCLE_BRANCH}" = master ]; then
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-server-dev:latest
+            fi
+
+  Push web-service dev image:
+    docker: [{image: fleshgrinder/docker-buildpack}]
+    working_directory: ~/src/web-service
+    steps:
+      - attach_workspace: {at: ~/src}
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - v2-web-service-dev-{{ checksum "Dockerfile.web-service-dev" }}
+            - v2-web-service-dev
+          paths: [/tmp/docker/web-service-dev.tar]
+      - run:
+          name: Load cache
+          command: |
+            set +o pipefail
+            docker load -i /tmp/docker/web-service-dev.tar | true
+            docker images
+      - run:
+          name: Push image
+          command: |
+            if [ "${CIRCLE_BRANCH}" = master ]; then
+              docker login -u fleshgrinder -p "${DOCKER_PASS}"
+              docker push fleshgrinder/web-service-dev:latest
+            fi
+
   Push web-server prod image:
     docker: [{image: fleshgrinder/docker-buildpack}]
     working_directory: ~/src/web-server
@@ -351,7 +401,7 @@ jobs:
       - setup_remote_docker
       - restore_cache:
           keys:
-            - v2-web-server-prod{{ checksum "Dockerfile.web-server-dev-prod" }}
+            - v2-web-server-prod-{{ checksum "Dockerfile.web-server-prod" }}
             - v2-web-server-prod
           paths: [/tmp/docker/web-server-prod.tar]
       - run:
@@ -376,7 +426,7 @@ jobs:
       - setup_remote_docker
       - restore_cache:
           keys:
-            - v2-web-service-prod{{ checksum "Dockerfile.web-service-prod" }}
+            - v2-web-service-prod-{{ checksum "Dockerfile.web-service-prod" }}
             - v2-web-service-prod
           paths: [/tmp/docker/web-service-prod.tar]
       - run:
