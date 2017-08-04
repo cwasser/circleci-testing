@@ -370,7 +370,7 @@ jobs:
           name: Push image
           command: |
             if [ "${CIRCLE_BRANCH}" = master ]; then
-              if [ -z `docker images -q fleshgrinder/web-server-dev:latest` ]; then
+              if [ ! -z `docker images -q fleshgrinder/web-server-dev:latest` ]; then
                 docker login -u fleshgrinder -p "${DOCKER_PASS}"
                 docker push fleshgrinder/web-server-dev:latest
               else
@@ -399,7 +399,7 @@ jobs:
           name: Push image
           command: |
             if [ "${CIRCLE_BRANCH}" = master ]; then
-              if [ -z `docker images -q fleshgrinder/web-service-dev:latest` ]; then
+              if [ ! -z `docker images -q fleshgrinder/web-service-dev:latest` ]; then
                 docker login -u fleshgrinder -p "${DOCKER_PASS}"
                 docker push fleshgrinder/web-service-dev:latest
               else
@@ -428,7 +428,7 @@ jobs:
           name: Push image
           command: |
             if [ "${CIRCLE_BRANCH}" = master ]; then
-              if [ -z `docker images -q fleshgrinder/web-server-prod:latest` ]; then
+              if [ ! -z `docker images -q fleshgrinder/web-server-prod:latest` ]; then
                 docker login -u fleshgrinder -p "${DOCKER_PASS}"
                 docker push fleshgrinder/web-server-prod:latest
               else
@@ -457,7 +457,7 @@ jobs:
           name: Push image
           command: |
             if [ "${CIRCLE_BRANCH}" = master ]; then
-              if [ -z `docker images -q fleshgrinder/web-service-prod:latest` ]; then
+              if [ ! -z `docker images -q fleshgrinder/web-service-prod:latest` ]; then
                 docker login -u fleshgrinder -p "${DOCKER_PASS}"
                 docker push fleshgrinder/web-service-prod:latest
               else
