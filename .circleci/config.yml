@@ -349,6 +349,9 @@ jobs:
           name: Execute tests
           command: |
             set +e
+            make --version
+            pwd
+            ls -la .
             make prod-test
 
   Push web-server dev image:
