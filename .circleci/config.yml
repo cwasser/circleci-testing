@@ -77,7 +77,7 @@ workflows:
       - Build web-service prod image:
           requires: ["Generate docker files", "Run web-service unit tests"]
 
-
+      # Run integration tests
       - Run web-testing tests:
           requires: ["Build web-server prod image", "Build web-server prod image"]
 
@@ -85,13 +85,13 @@ workflows:
 #      - run end-to-end tests
 
       - Push web-server dev image:
-          requires: ["Run web-testing tests"]
+          requires: ["Build web-server dev image", "Run web-testing tests"]
       - Push web-service dev image:
-          requires: ["Run web-testing tests"]
+          requires: ["Build web-service dev image", "Run web-testing tests"]
       - Push web-server prod image:
-          requires: ["Run web-testing tests"]
+          requires: ["Build web-server prod image", "Run web-testing tests"]
       - Push web-service prod image:
-          requires: ["Run web-testing tests"]
+          requires: ["Build web-service prod image", "Run web-testing tests"]
 
 #      - Bundle web-server prod image with source-code:
 #      - Bundle web-service prod image with source-code:
