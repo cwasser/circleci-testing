@@ -11,6 +11,15 @@ templates:
       name: Install make v4
       command: |
         set +o pipefail
+
+        which make
+        make -v
+
+        if [ -f /usr/local/bin/make ];
+          then echo "JAUUUUUUUUU"
+          else echo "NEEEEEEE"
+        fi;
+
         MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
         if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
           cd /tmp
@@ -26,7 +35,7 @@ templates:
         if [ -f /usr/local/bin/make ];
           then /usr/local/bin/make -v
           else make -v
-        fi
+        fi;
   save_cache: &make-v4-for-machine-save_cache
     save_cache:
       key: v1-make4
