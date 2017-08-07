@@ -5,7 +5,7 @@ templates:
     restore_cache: &make-v4-for-machine-executor-restore_cache
       restore_cache:
         keys:
-          - v1-make4
+          - v2-make4
   executor-compile: &make-v4-for-machine-executor-compile
     run:
       name: Install make v4
@@ -40,7 +40,7 @@ templates:
 
   save_cache: &make-v4-for-machine-save_cache
     save_cache:
-      key: v1-make4
+      key: v2-make4
       paths:
         - /tmp/bin/make
 
