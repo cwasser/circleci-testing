@@ -5,33 +5,41 @@ templates:
     restore_cache: &make-v4-for-machine-executor-restore_cache
       restore_cache:
         keys:
-          - v1-make4
+          - v2-make4
   executor-compile: &make-v4-for-machine-executor-compile
     run:
       name: Install make v4
       command: |
         set +o pipefail
-        MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
-        if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
-          cd /tmp
-          wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
-          tar xvf make-4.1.tar.gz
-          cd make-4.1/
-          ./configure
-          make
-          sudo make install
-          rm -rf make-4.1.tar.gz make-4.1
+
+        if [ -f /tmp/bin/make ];
+          then
+            echo "Restored make v4 binary from cache"
+            /tmp/bin/make -v
+          else
+            MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
+            if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
+              cd /tmp
+              wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
+              tar xvf make-4.1.tar.gz
+              cd make-4.1/
+              ./configure --prefix=/tmp
+              make
+              sudo make install
+              rm -rf make-4.1.tar.gz make-4.1
+            fi;
+
+            if [ -f /tmp/bin/make ];
+              then /tmp/bin/make -v
+              else echo "Compiling make v4 failed!" && exit 1
+            fi;
         fi;
 
-        if [ -f /usr/local/bin/make ];
-          then /usr/local/bin/make -v
-          else make -v
-        fi
   save_cache: &make-v4-for-machine-save_cache
     save_cache:
-      key: v1-make4
+      key: v2-make4
       paths:
-        - /usr/local/bin/make
+        - /tmp/bin/make
 
 workflows:
   version: 2
@@ -61,6 +69,13 @@ workflows:
 #
 #  promote-snapshot-artifacts:
 #    jobs:
+
+  Test pipeline 2:
+    jobs:
+      - Checkout
+      - Generate docker files:
+          filters: {branches: {only: [master]}}
+          requires: ["Checkout"]
 
   Pipeline:
     jobs:
@@ -299,7 +314,7 @@ jobs:
             docker images
       - run:
           name: Execute unit tests
-          command: /usr/local/bin/make test
+          command: /tmp/bin/make test
       - save_cache:
           key: v2-web-service-composer-{{ checksum "composer.lock" }}
           paths:
@@ -352,7 +367,7 @@ jobs:
             docker images
       - run:
           name: Execute tests
-          command: /usr/local/bin/make prod-test
+          command: /tmp/bin/make prod-test
 
   Push web-server dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
