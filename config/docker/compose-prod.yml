@@ -2,9 +2,7 @@ version: '3.1'
 
 services:
   web-server:
-    build:
-      context: ../../web-server
-      dockerfile: Dockerfile.web-server-prod
+    image: fleshgrinder/web-server-prod:latest
     domainname: api.fleshgrinder.docker
     hostname: web-server
     image: fleshgrinder/web-server-prod:latest
@@ -18,9 +16,7 @@ services:
       - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
 
   web-service:
-    build:
-      context: ../../web-service
-      dockerfile: Dockerfile.web-service-prod
+    image: fleshgrinder/web-service-prod:latest
     domainname: api.fleshgrinder.docker
     environment:
       - PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
