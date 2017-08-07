@@ -15,10 +15,10 @@ templates:
         which make
         make -v
 
-        if [ -f /tmp/make ];
+        if [ -f /tmp/bin/make ];
           then
             echo "JAUUUUUUUUU"
-            /tmp/make -v
+            /tmp/bin/make -v
           else
             MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
             if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
@@ -42,7 +42,7 @@ templates:
     save_cache:
       key: v1-make4
       paths:
-        - /tmp/make
+        - /tmp/bin/make
 
 workflows:
   version: 2
@@ -310,7 +310,7 @@ jobs:
             docker images
       - run:
           name: Execute unit tests
-          command: /tmp/make test
+          command: /tmp/bin/make test
       - save_cache:
           key: v2-web-service-composer-{{ checksum "composer.lock" }}
           paths:
@@ -363,7 +363,7 @@ jobs:
             docker images
       - run:
           name: Execute tests
-          command: /tmp/make prod-test
+          command: /tmp/bin/make prod-test
 
   Push web-server dev image:
     docker: [{image: fleshgrinder/docker-buildpack}]
