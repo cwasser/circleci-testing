@@ -70,6 +70,13 @@ workflows:
 #  promote-snapshot-artifacts:
 #    jobs:
 
+  Test pipeline 2:
+    jobs:
+      - Checkout
+      - Generate docker files:
+          filters: {branches: {only: [master]}}
+          requires: ["Checkout"]
+
   Pipeline:
     jobs:
       - Checkout
