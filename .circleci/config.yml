@@ -16,26 +16,28 @@ templates:
         make -v
 
         if [ -f /tmp/make ];
-          then echo "JAUUUUUUUUU"
-          else echo "NEEEEEEE"
+          then
+            echo "JAUUUUUUUUU"
+            /tmp/make -v
+          else
+            MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
+            if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
+              cd /tmp
+              wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
+              tar xvf make-4.1.tar.gz
+              cd make-4.1/
+              ./configure --prefix=/tmp
+              make
+              sudo make install
+              rm -rf make-4.1.tar.gz make-4.1
+            fi;
+
+            if [ -f /tmp/bin/make ];
+              then /tmp/bin/make -v
+              else make -v
+            fi;
         fi;
 
-        MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
-        if [ "$MAKE_MAJOR_VERSION" -lt "4" ]; then
-          cd /tmp
-          wget http://ftp.gnu.org/gnu/make/make-4.1.tar.gz
-          tar xvf make-4.1.tar.gz
-          cd make-4.1/
-          ./configure --prefix=/tmp
-          make
-          sudo make install
-          rm -rf make-4.1.tar.gz make-4.1
-        fi;
-
-        if [ -f /tmp/bin/make ];
-          then /tmp/bin/make -v
-          else make -v
-        fi;
   save_cache: &make-v4-for-machine-save_cache
     save_cache:
       key: v1-make4
