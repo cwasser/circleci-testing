@@ -12,12 +12,9 @@ templates:
       command: |
         set +o pipefail
 
-        which make
-        make -v
-
         if [ -f /tmp/bin/make ];
           then
-            echo "JAUUUUUUUUU"
+            echo "Restored make v4 binary from cache"
             /tmp/bin/make -v
           else
             MAKE_MAJOR_VERSION=$(make -v | grep -Po "Make\s\d+" | cut -d " " -f2 | cut -d. -f1 )
@@ -34,7 +31,7 @@ templates:
 
             if [ -f /tmp/bin/make ];
               then /tmp/bin/make -v
-              else make -v
+              else echo "Compiling make v4 failed!" && exit 1
             fi;
         fi;
 
