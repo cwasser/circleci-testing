@@ -1,6 +1,22 @@
 version: '3.1'
 
 services:
+  # lb (linkerd) for MS and user profiling
+  web-price-search:
+    image: buoyantio/linkerd:1.1.2 # Testing only, build own image later on
+    volumes:
+      - '../../web-price-search/config/linkerd/linkerd.yml:/usr/local/etc/linkerd/linkerd.yml:ro'
+    command: >
+      /usr/local/etc/linkerd/linkerd.yml
+
+  web-user-profiling:
+      image: buoyantio/linkerd:1.1.2 # Testing only, build own image later on
+      volumes:
+        - '../../web-user-profiling/config/linkerd/linkerd.yml:/usr/local/etc/linkerd/linkerd.yml:ro'
+      command: >
+        /usr/local/etc/linkerd/linkerd.yml
+
+  # nginx web server
   web-server:
     image: fleshgrinder/web-server-prod:latest
     domainname: api.fleshgrinder.docker
@@ -15,6 +31,7 @@ services:
       - '../../web-server/config/nginx:/usr/local/etc/nginx:ro'
       - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
 
+  # Web service containing the php source code
   web-service:
     image: fleshgrinder/web-service-prod:latest
     domainname: api.fleshgrinder.docker
@@ -22,22 +39,11 @@ services:
       - PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
       - PHP_ZEND_ASSERTIONS=1
     hostname: web-service
+    links:
+      - web-price-search
+      - web-user-profiling
     image: fleshgrinder/web-service-prod:latest
     volumes:
       - '../../web-service/config/php:/usr/local/etc/php:ro'
       - '../../web-service/src/main/php:/srv/www/web-service/src/main/php:ro'
       - '../../web-service/src/webapp:/srv/www/web-service/src/webapp:ro'
-
-  # lb (linkerd) for MS and user profiling
-  # for testing we are putting it in front iof the nginx
-  l5d:
-    image: buoyantio/linkerd:1.1.2
-    links:
-      - web-server
-    ports:
-      - "4140:4140" # Later 8080?
-      - "9990:9990"
-    volumes:
-      - '../linkerd/linkerd.yaml:/usr/local/etc/linkerd/linkerd.yaml:ro'
-    command: >
-      /usr/local/etc/linkerd/linkerd.yaml
